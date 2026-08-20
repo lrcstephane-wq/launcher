@@ -6,6 +6,10 @@ on:
       - main
       - "feature/**"
       - "fix/**"
+      - "codex/**"
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -39,21 +43,27 @@ jobs:
 
 
   release:
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release-v0.3.0')
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release-v')
     needs: build
     runs-on: windows-latest
     permissions:
       contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download executable
         uses: actions/download-artifact@v4
         with:
           name: Launcher-Windows-x64
           path: publish
 
-      - name: Publish GitHub release v0.3.0
+      - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create v0.3.0 publish/Launcher.exe --repo ${{ github.repository }} --target ${{ github.sha }} --title "Idéo Launcher v0.3.0" --notes "Nouvelle interface Idéo et catalogue générique : cartes, groupes, tags, filtres multi-sélection, favoris, vues enregistrées, import de raccourcis, sauvegardes et partage du catalogue."
+          [xml]$project = Get-Content "src/Ideo.TopSolidLauncher/Ideo.TopSolidLauncher.csproj"
+          $version = $project.Project.PropertyGroup.Version
+          $tag = "v$version"
+          gh release create $tag publish/Launcher.exe --repo ${{ github.repository }} --target ${{ github.sha }} --title "Idéo Launcher $tag" --notes "Interface harmonisée et responsive, fenêtres d’édition restructurées, catalogue partagé plus visible et rechargement automatique des modifications réseau."

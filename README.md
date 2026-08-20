@@ -13,6 +13,7 @@ Application Windows destinée à centraliser les raccourcis de travail Idéo : T
 - vues de filtres enregistrées ;
 - gestion centralisée des tags et de leurs catégories ;
 - catalogue local ou partagé sur un dossier synchronisé/réseau ;
+- chemin du catalogue visible et rechargement automatique des modifications partagées ;
 - sauvegarde automatique des 20 dernières versions du catalogue ;
 - import et export JSON ;
 - mise à jour automatique depuis les releases GitHub.

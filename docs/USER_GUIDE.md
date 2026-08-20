@@ -51,6 +51,10 @@ Dans `•••`, choisir **Choisir un catalogue partagé** :
 
 Un dossier Nextcloud, OneDrive ou réseau peut être utilisé. Les favoris, récents et vues enregistrées ne sont pas partagés.
 
+Le pied de la fenêtre indique en permanence si le catalogue est local, partagé ou indisponible, ainsi que son chemin. Cliquer sur cet état permet de changer de catalogue, de le recharger, d'ouvrir son dossier ou de revenir au catalogue local.
+
+Lorsqu'un autre poste enregistre une modification, le catalogue est rechargé automatiquement sous quelques secondes. Si une fenêtre d'édition est ouverte, le rechargement attend sa fermeture. En cas d'indisponibilité temporaire du serveur au démarrage, le chemin partagé est conservé et le launcher peut tenter de s'y reconnecter avec **Recharger maintenant**.
+
 ## Sauvegarder ou transférer
 
 - **Exporter le catalogue** crée une copie JSON transportable ;

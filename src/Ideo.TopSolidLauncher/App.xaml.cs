@@ -11,7 +11,7 @@ public partial class App : Application
             LogService.Write("Erreur WPF non gérée.", eventArgs.Exception);
             MessageBox.Show(
                 $"Une erreur inattendue est survenue.\n\nLe journal se trouve ici :\n{LogService.LogPath}",
-                "Launcher TopSolid",
+                "Idéo Launcher",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             eventArgs.Handled = true;
