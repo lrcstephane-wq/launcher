@@ -2,7 +2,10 @@ name: Build Windows
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - "feature/**"
+      - "fix/**"
   workflow_dispatch:
 
 permissions:

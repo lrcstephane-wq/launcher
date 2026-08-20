@@ -12,4 +12,9 @@
     <AssemblyVersion>0.2.0.0</AssemblyVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets\IdeoBackground.jpg" />
+    <Resource Include="Assets\IdeoLogo.png" />
+    <Resource Include="Assets\IdeoMark.png" />
+  </ItemGroup>
 </Project>
