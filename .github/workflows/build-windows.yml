@@ -24,7 +24,7 @@ jobs:
         run: dotnet restore Launcher.sln
 
       - name: Publish single executable
-        run: dotnet publish src/Ideo.TopSolidLauncher/Ideo.TopSolidLauncher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish
+        run: dotnet publish src/Ideo.TopSolidLauncher/Ideo.TopSolidLauncher.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -o publish
 
       - name: Upload executable
         uses: actions/upload-artifact@v4
