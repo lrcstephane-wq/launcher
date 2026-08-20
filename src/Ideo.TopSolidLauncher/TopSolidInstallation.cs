@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace Ideo.TopSolidLauncher;
 
 public sealed record TopSolidInstallation(string Version, string ExecutablePath)
