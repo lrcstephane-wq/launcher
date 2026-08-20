@@ -304,6 +304,25 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
+                    <Border Grid.Row="1" Background="#C9182230" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="14" Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            IsHitTestVisible="False">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding VisibleCardCount}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="Aucune carte ne correspond" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            <TextBlock Text="Modifiez la recherche ou réinitialisez les filtres."
+                                       Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Grid>
 

@@ -89,6 +89,8 @@ public partial class MainWindow : Window
         _viewModel.StatusMessage = "Filtres réinitialisés";
     }
 
+    #region Cartes et lancement
+
     private void NewCard_Click(object sender, RoutedEventArgs e) => AddCard(_viewModel.Catalog.Groups.OrderBy(group => group.SortOrder).First().Id);
 
     private void NewCardInGroup_Click(object sender, RoutedEventArgs e)
@@ -185,6 +187,10 @@ public partial class MainWindow : Window
         if (Context<CardViewModel>(sender) is { } card)
             _viewModel.ToggleFavorite(card);
     }
+
+    #endregion
+
+    #region Tags, détection et groupes
 
     private void ManageTags_Click(object sender, RoutedEventArgs e)
     {
@@ -309,6 +315,10 @@ public partial class MainWindow : Window
         SaveCatalog("L'ordre des groupes a été modifié");
     }
 
+    #endregion
+
+    #region Ordre des cartes et vues
+
     private void MoveCardUp_Click(object sender, RoutedEventArgs e) => MoveCard(Context<CardViewModel>(sender), -1);
     private void MoveCardDown_Click(object sender, RoutedEventArgs e) => MoveCard(Context<CardViewModel>(sender), 1);
 
@@ -345,6 +355,10 @@ public partial class MainWindow : Window
         if (Context<SavedView>(sender) is { } view)
             _viewModel.DeleteSavedView(view);
     }
+
+    #endregion
+
+    #region Menus et catalogue
 
     private void OpenSettingsMenu_Click(object sender, RoutedEventArgs e)
     {
@@ -495,6 +509,10 @@ public partial class MainWindow : Window
         catch (Exception exception) { MessageBox.Show(exception.Message, "Journal inaccessible", MessageBoxButton.OK, MessageBoxImage.Warning); }
     }
 
+    #endregion
+
+    #region Mise à jour automatique
+
     private async void CheckUpdate_Click(object sender, RoutedEventArgs e) =>
         await CheckForUpdateAsync(showUpToDateMessage: true);
 
@@ -541,6 +559,10 @@ public partial class MainWindow : Window
             UpdateButton.IsEnabled = true;
         }
     }
+
+    #endregion
+
+    #region Glisser-déposer
 
     private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -599,6 +621,10 @@ public partial class MainWindow : Window
         if (sourceGroupId != destinationGroupId) ReindexCards(sourceGroupId);
         SaveCatalog("La carte a été déplacée");
     }
+
+    #endregion
+
+    #region Helpers et raccourcis clavier
 
     private void ReindexCards(Guid groupId)
     {
@@ -701,4 +727,6 @@ public partial class MainWindow : Window
         }
         return null;
     }
+
+    #endregion
 }

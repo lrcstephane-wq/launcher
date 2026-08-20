@@ -194,15 +194,11 @@ public partial class CardEditorWindow : Window
 
     private static string NormalizeColor(string color)
     {
-        try
-        {
-            _ = (Color)ColorConverter.ConvertFromString(color);
-            return color.Trim();
-        }
-        catch
-        {
-            return "#2E69B3";
-        }
+        var value = color.Trim();
+        if (value.StartsWith('#') && value.Length is 7 or 9 &&
+            uint.TryParse(value[1..], System.Globalization.NumberStyles.HexNumber, null, out _))
+            return value.ToUpperInvariant();
+        return "#2E69B3";
     }
 
     private static string? GetShortcutPath(IDataObject data)

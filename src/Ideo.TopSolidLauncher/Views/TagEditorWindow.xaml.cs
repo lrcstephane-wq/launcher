@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Media;
 using Ideo.TopSolidLauncher.Models;
 
 namespace Ideo.TopSolidLauncher.Views;
@@ -36,20 +35,18 @@ public partial class TagEditorWindow : Window
             MessageBox.Show("Le nom et la catégorie sont obligatoires.", Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
-        try
+        var color = ColorTextBox.Text.Trim();
+        if (!color.StartsWith('#') || color.Length is not (7 or 9) ||
+            !uint.TryParse(color[1..], System.Globalization.NumberStyles.HexNumber, null, out _))
         {
-            _ = (Color)ColorConverter.ConvertFromString(ColorTextBox.Text);
-        }
-        catch
-        {
-            MessageBox.Show("La couleur doit être au format #RRGGBB.", Title, MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("La couleur doit être au format #RRGGBB ou #AARRGGBB.", Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         Result.Name = name;
         Result.Category = category;
         Result.Description = DescriptionTextBox.Text.Trim();
-        Result.Color = ColorTextBox.Text.Trim();
+        Result.Color = color.ToUpperInvariant();
         DialogResult = true;
     }
 }
