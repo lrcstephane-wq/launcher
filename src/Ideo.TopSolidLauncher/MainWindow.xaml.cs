@@ -44,6 +44,7 @@ public partial class MainWindow : Window
             Process.Start(new ProcessStartInfo
             {
                 FileName = installation.ExecutablePath,
+                Arguments = installation.Arguments,
                 WorkingDirectory = installation.FolderPath,
                 UseShellExecute = true
             });
