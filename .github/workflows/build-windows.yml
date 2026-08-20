@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -33,3 +33,9 @@ jobs:
           path: publish/Launcher.exe
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish GitHub release v0.2.0
+        if: contains(github.event.head_commit.message, 'release: v0.2.0')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create v0.2.0 publish/Launcher.exe --target ${{ github.sha }} --title "Launcher TopSolid v0.2.0" --notes "Mise à jour automatique, contrôle d'intégrité SHA-256 et diagnostic intégré."
