@@ -1,0 +1,13 @@
+<Application x:Class="Ideo.TopSolidLauncher.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#F4F7FA" />
+        <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#0878C9" />
+        <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#065D9B" />
+        <SolidColorBrush x:Key="TextBrush" Color="#152536" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#637383" />
+    </Application.Resources>
+</Application>
