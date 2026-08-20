@@ -13,8 +13,9 @@ public sealed class CardLauncherService
             throw new InvalidOperationException(validation.Message);
 
         var target = Environment.ExpandEnvironmentVariables(card.TargetPath.Trim().Trim('"'));
+        var isUri = Uri.TryCreate(target, UriKind.Absolute, out var uri) && !uri.IsFile;
         var workingDirectory = string.IsNullOrWhiteSpace(card.WorkingDirectory)
-            ? Path.GetDirectoryName(target) ?? string.Empty
+            ? isUri ? AppContext.BaseDirectory : Path.GetDirectoryName(target) ?? AppContext.BaseDirectory
             : Environment.ExpandEnvironmentVariables(card.WorkingDirectory.Trim().Trim('"'));
 
         var startInfo = new ProcessStartInfo

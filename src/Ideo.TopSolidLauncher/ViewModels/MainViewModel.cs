@@ -172,7 +172,8 @@ public sealed class MainViewModel : ObservableObject
                 .Select(card => new CardViewModel(
                     card,
                     Catalog.Tags.Where(tag => card.TagIds.Contains(tag.Id)).OrderBy(tag => tag.SortOrder).ToArray(),
-                    Settings.FavoriteCardIds.Contains(card.Id)))
+                    Settings.FavoriteCardIds.Contains(card.Id),
+                    Path.GetDirectoryName(CatalogService.CatalogPath)!))
                 .OrderByDescending(card => card.IsFavorite)
                 .ThenBy(card => RecentIndex(card.Model.Id))
                 .ThenBy(card => card.Model.SortOrder)

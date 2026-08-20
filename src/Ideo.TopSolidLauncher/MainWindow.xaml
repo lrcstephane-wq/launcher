@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Idéo Launcher" Width="1280" Height="820" MinWidth="980" MinHeight="650"
-        WindowStartupLocation="CenterScreen" Closing="Window_Closing">
+        WindowStartupLocation="CenterScreen" Closing="Window_Closing" KeyDown="MainWindow_KeyDown">
     <Window.Resources>
         <Style x:Key="SidebarHeading" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
@@ -59,7 +59,7 @@
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <TextBlock Text="⌕" FontSize="24" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent"
+                            <TextBox x:Name="SearchTextBox" Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent"
                                      BorderThickness="0" Padding="0" FontSize="15" ToolTip="Rechercher un titre, un tag, une version ou une commande" />
                             <Button Grid.Column="2" Content="×" Style="{StaticResource GhostButton}" Click="ClearSearch_Click"
                                     ToolTip="Effacer la recherche" Margin="2" />
@@ -76,9 +76,11 @@
                                 <ContextMenu>
                                     <MenuItem Header="Gérer les tags" Click="ManageTags_Click" />
                                     <MenuItem Header="Ajouter un groupe" Click="AddGroup_Click" />
+                                    <MenuItem Header="Détecter les versions TopSolid" Click="DetectTopSolid_Click" />
                                     <Separator />
-                                    <MenuItem Header="Vue compacte" IsCheckable="True" Click="ToggleCompact_Click" x:Name="CompactMenuItem" />
+                                    <MenuItem Header="Vue compacte" IsCheckable="True" Click="ToggleCompact_Click" />
                                     <Separator />
+                                    <MenuItem Header="Recharger le catalogue" Click="ReloadCatalog_Click" />
                                     <MenuItem Header="Choisir un catalogue partagé…" Click="ChooseCatalog_Click" />
                                     <MenuItem Header="Importer un catalogue…" Click="ImportCatalog_Click" />
                                     <MenuItem Header="Exporter le catalogue…" Click="ExportCatalog_Click" />
@@ -245,6 +247,16 @@
                                                                     </Grid>
 
                                                                     <Grid Grid.Row="1" Margin="0,10,0,8">
+                                                                        <Grid.Style>
+                                                                            <Style TargetType="Grid">
+                                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Grid.Style>
                                                                         <Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                                                         <Border x:Name="LogoPanel" Width="50" Height="50" CornerRadius="11" Background="#121A25" Padding="7">
                                                                             <Image Source="{Binding LogoSource}" Stretch="Uniform" />

@@ -95,8 +95,9 @@ public partial class MainWindow : Window
         var dialog = new CardEditorWindow(_viewModel.Catalog, card, isNew: true) { Owner = this };
         if (dialog.ShowDialog() != true)
             return;
+        PrepareCard(dialog.Result);
         _viewModel.Catalog.Cards.Add(dialog.Result);
-        _viewModel.SaveCatalog($"« {dialog.Result.Title} » a été ajouté");
+        SaveCatalog($"« {dialog.Result.Title} » a été ajouté");
     }
 
     private void EditCard_Click(object sender, RoutedEventArgs e)
@@ -106,10 +107,11 @@ public partial class MainWindow : Window
         var dialog = new CardEditorWindow(_viewModel.Catalog, card.Model, isNew: false) { Owner = this };
         if (dialog.ShowDialog() != true)
             return;
+        PrepareCard(dialog.Result);
         var index = _viewModel.Catalog.Cards.FindIndex(item => item.Id == card.Model.Id);
         if (index >= 0)
             _viewModel.Catalog.Cards[index] = dialog.Result;
-        _viewModel.SaveCatalog($"« {dialog.Result.Title} » a été modifié");
+        SaveCatalog($"« {dialog.Result.Title} » a été modifié");
     }
 
     private void DuplicateCard_Click(object sender, RoutedEventArgs e)
@@ -123,8 +125,9 @@ public partial class MainWindow : Window
         var dialog = new CardEditorWindow(_viewModel.Catalog, copy, isNew: false) { Owner = this, Title = "Dupliquer un raccourci" };
         if (dialog.ShowDialog() != true)
             return;
+        PrepareCard(dialog.Result);
         _viewModel.Catalog.Cards.Add(dialog.Result);
-        _viewModel.SaveCatalog($"« {dialog.Result.Title} » a été créé");
+        SaveCatalog($"« {dialog.Result.Title} » a été créé");
     }
 
     private void DeleteCard_Click(object sender, RoutedEventArgs e)
@@ -138,7 +141,7 @@ public partial class MainWindow : Window
         _settings.FavoriteCardIds.Remove(card.Model.Id);
         _settings.RecentCardIds.Remove(card.Model.Id);
         ReindexCards(card.Model.GroupId);
-        _viewModel.SaveCatalog($"« {card.Title} » a été supprimé");
+        SaveCatalog($"« {card.Title} » a été supprimé");
     }
 
     private void LaunchCard_Click(object sender, RoutedEventArgs e)
@@ -175,7 +178,56 @@ public partial class MainWindow : Window
         var dialog = new TagManagerWindow(_viewModel.Catalog) { Owner = this };
         dialog.ShowDialog();
         if (dialog.HasChanges)
-            _viewModel.SaveCatalog("Les tags ont été mis à jour");
+            SaveCatalog("Les tags ont été mis à jour");
+    }
+
+    private void DetectTopSolid_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var installations = TopSolidDiscovery.FindInstallations();
+            var missing = installations.Where(installation => !_viewModel.Catalog.Cards.Any(card =>
+                string.Equals(Environment.ExpandEnvironmentVariables(card.TargetPath), installation.ExecutablePath,
+                    StringComparison.OrdinalIgnoreCase))).ToArray();
+            if (missing.Length == 0)
+            {
+                MessageBox.Show("Toutes les versions détectées possèdent déjà une carte.", "Détection TopSolid",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (MessageBox.Show($"{missing.Length} nouvelle(s) version(s) détectée(s). Créer les cartes correspondantes ?",
+                    "Détection TopSolid", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                return;
+
+            var group = _viewModel.Catalog.Groups.FirstOrDefault(item => item.Name.Equals("Environnements Idéo", StringComparison.OrdinalIgnoreCase))
+                        ?? _viewModel.Catalog.Groups.OrderBy(item => item.SortOrder).First();
+            var workTag = EnsureTag("Travail", "Usage", "#2E69B3");
+            var appTag = EnsureTag("TopSolid'Wood", "Application", "#52667D");
+            var yearTag = EnsureTag("2021", "Année", "#6B5BA7");
+            foreach (var installation in missing)
+            {
+                var versionTag = EnsureTag(installation.Version, "Version", "#C98247");
+                _viewModel.Catalog.Cards.Add(new LauncherCard
+                {
+                    Title = $"TopSolid'Wood {installation.Version}",
+                    Subtitle = "Base de travail",
+                    GroupId = group.Id,
+                    TargetPath = installation.ExecutablePath,
+                    Arguments = installation.Arguments,
+                    WorkingDirectory = installation.FolderPath,
+                    AccentColor = "#2E69B3",
+                    TagIds = [workTag.Id, appTag.Id, yearTag.Id, versionTag.Id],
+                    SortOrder = _viewModel.Catalog.Cards.Count(card => card.GroupId == group.Id),
+                    MinimizeAfterLaunch = true
+                });
+            }
+            SaveCatalog($"{missing.Length} carte(s) TopSolid ont été ajoutées");
+        }
+        catch (Exception exception)
+        {
+            LogService.Write("La détection TopSolid a échoué.", exception);
+            MessageBox.Show(exception.Message, "Détection impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private void AddGroup_Click(object sender, RoutedEventArgs e)
@@ -188,7 +240,7 @@ public partial class MainWindow : Window
             Name = prompt.Value,
             SortOrder = _viewModel.Catalog.Groups.Count
         });
-        _viewModel.SaveCatalog($"Le groupe « {prompt.Value} » a été créé");
+        SaveCatalog($"Le groupe « {prompt.Value} » a été créé");
     }
 
     private void RenameGroup_Click(object sender, RoutedEventArgs e)
@@ -199,7 +251,7 @@ public partial class MainWindow : Window
         if (prompt.ShowDialog() != true)
             return;
         group.Model.Name = prompt.Value;
-        _viewModel.SaveCatalog($"Le groupe est maintenant nommé « {prompt.Value} »");
+        SaveCatalog($"Le groupe est maintenant nommé « {prompt.Value} »");
     }
 
     private void DeleteGroup_Click(object sender, RoutedEventArgs e)
@@ -226,7 +278,7 @@ public partial class MainWindow : Window
         _viewModel.Catalog.Groups.Remove(group.Model);
         ReindexGroups();
         ReindexCards(destination.Id);
-        _viewModel.SaveCatalog($"Le groupe « {group.Name} » a été supprimé");
+        SaveCatalog($"Le groupe « {group.Name} » a été supprimé");
     }
 
     private void MoveGroupUp_Click(object sender, RoutedEventArgs e) => MoveGroup(Context<GroupViewModel>(sender), -1);
@@ -241,7 +293,7 @@ public partial class MainWindow : Window
         if (index < 0 || target < 0 || target >= ordered.Count) return;
         (ordered[index], ordered[target]) = (ordered[target], ordered[index]);
         for (var i = 0; i < ordered.Count; i++) ordered[i].SortOrder = i;
-        _viewModel.SaveCatalog("L'ordre des groupes a été modifié");
+        SaveCatalog("L'ordre des groupes a été modifié");
     }
 
     private void MoveCardUp_Click(object sender, RoutedEventArgs e) => MoveCard(Context<CardViewModel>(sender), -1);
@@ -257,7 +309,7 @@ public partial class MainWindow : Window
         if (index < 0 || target < 0 || target >= ordered.Count) return;
         (ordered[index], ordered[target]) = (ordered[target], ordered[index]);
         for (var i = 0; i < ordered.Count; i++) ordered[i].SortOrder = i;
-        _viewModel.SaveCatalog("L'ordre des cartes a été modifié");
+        SaveCatalog("L'ordre des cartes a été modifié");
     }
 
     private void SaveView_Click(object sender, RoutedEventArgs e)
@@ -325,14 +377,17 @@ public partial class MainWindow : Window
 
         try
         {
-            _catalogService.UseCatalog(path);
             LauncherCatalog catalog;
             if (choice == MessageBoxResult.Yes)
+            {
+                _catalogService.UseCatalog(path);
                 catalog = _catalogService.LoadOrCreate();
+            }
             else
             {
-                catalog = _viewModel.Catalog;
-                _catalogService.Save(catalog, createBackup: false);
+                _catalogService.CreateCopyAt(path, _viewModel.Catalog);
+                _catalogService.UseCatalog(path);
+                catalog = _catalogService.LoadOrCreate();
             }
             _settings.CatalogPath = path;
             _settingsService.Save(_settings);
@@ -399,6 +454,8 @@ public partial class MainWindow : Window
             MessageBox.Show(exception.Message, "Dossier inaccessible", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
+
+    private void ReloadCatalog_Click(object sender, RoutedEventArgs e) => ReloadCatalog();
 
     private void OpenLog_Click(object sender, RoutedEventArgs e)
     {
@@ -508,7 +565,7 @@ public partial class MainWindow : Window
         destinationCards.Insert(destinationOrder, card);
         for (var i = 0; i < destinationCards.Count; i++) destinationCards[i].SortOrder = i;
         if (sourceGroupId != destinationGroupId) ReindexCards(sourceGroupId);
-        _viewModel.SaveCatalog("La carte a été déplacée");
+        SaveCatalog("La carte a été déplacée");
     }
 
     private void ReindexCards(Guid groupId)
@@ -527,6 +584,78 @@ public partial class MainWindow : Window
     {
         CatalogLocationText.Text = string.IsNullOrWhiteSpace(_settings.CatalogPath) ? "Catalogue local" : "Catalogue partagé";
         CatalogLocationText.ToolTip = _catalogService.CatalogPath;
+    }
+
+    private bool SaveCatalog(string message)
+    {
+        try
+        {
+            _viewModel.SaveCatalog(message);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            LogService.Write("Impossible d'enregistrer le catalogue.", exception);
+            MessageBox.Show(
+                $"Les changements n'ont pas été enregistrés. Le catalogue va être rechargé pour éviter d'écraser des données.\n\n{exception.Message}",
+                "Enregistrement impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ReloadCatalog();
+            return false;
+        }
+    }
+
+    private void ReloadCatalog()
+    {
+        try
+        {
+            var catalog = _catalogService.LoadOrCreate();
+            _viewModel.Rebuild(catalog);
+            _viewModel.StatusMessage = "Le catalogue a été rechargé";
+        }
+        catch (Exception exception)
+        {
+            LogService.Write("Impossible de recharger le catalogue.", exception);
+            MessageBox.Show(exception.Message, "Rechargement impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void PrepareCard(LauncherCard card) => card.LogoPath = _catalogService.ImportCardLogo(card);
+
+    private LauncherTag EnsureTag(string name, string category, string color)
+    {
+        var existing = _viewModel.Catalog.Tags.FirstOrDefault(tag =>
+            tag.Name.Equals(name, StringComparison.OrdinalIgnoreCase) &&
+            tag.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null) return existing;
+        var tag = new LauncherTag
+        {
+            Name = name,
+            Category = category,
+            Color = color,
+            SortOrder = _viewModel.Catalog.Tags.Count(item => item.Category.Equals(category, StringComparison.OrdinalIgnoreCase))
+        };
+        _viewModel.Catalog.Tags.Add(tag);
+        return tag;
+    }
+
+    private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.N && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            NewCard_Click(this, new RoutedEventArgs());
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            SearchTextBox.Focus();
+            SearchTextBox.SelectAll();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F5)
+        {
+            ReloadCatalog();
+            e.Handled = true;
+        }
     }
 
     private static T? Context<T>(object sender) where T : class => (sender as FrameworkElement)?.DataContext as T;

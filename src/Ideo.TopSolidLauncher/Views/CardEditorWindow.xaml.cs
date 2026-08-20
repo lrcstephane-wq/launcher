@@ -54,12 +54,17 @@ public partial class CardEditorWindow : Window
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         ReadForm();
-        var validation = CardValidationService.Validate(Result);
-        if (!validation.IsValid)
+        var structure = CardValidationService.ValidateForSave(Result);
+        if (!structure.IsValid)
         {
-            MessageBox.Show(validation.Message, "Raccourci incomplet", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(structure.Message, "Raccourci incomplet", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
+        var readiness = CardValidationService.Validate(Result);
+        if (!readiness.IsValid && MessageBox.Show(
+                $"Cette carte ne pourra pas être lancée sur ce poste pour le moment :\n\n{readiness.Message}\n\nL'enregistrer malgré tout ?",
+                "Cible indisponible", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
         DialogResult = true;
     }
 
