@@ -46,6 +46,8 @@ La recherche texte s'ajoute avec `ET` et inspecte titre, description, cible, arg
 - les 20 sauvegardes les plus récentes sont conservées ;
 - les logos choisis sont copiés dans `Assets` à côté du catalogue et référencés par un chemin relatif ;
 - une écriture est refusée si le fichier partagé a été modifié par un autre poste depuis son chargement ;
+- la date d'écriture du catalogue actif est contrôlée périodiquement et déclenche un rechargement automatique hors fenêtre modale ;
+- une indisponibilité temporaire du partage ne supprime pas le chemin configuré dans les préférences locales ;
 - les erreurs non gérées sont journalisées ;
 - les cibles sont validées avant enregistrement et avant lancement ;
 - les réglages personnels sont séparés du catalogue partageable.

@@ -36,7 +36,10 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 - exporter puis importer un catalogue ;
 - restaurer une sauvegarde depuis `Backups` ;
 - créer une copie dans un dossier partagé et contrôler les logos sur un second poste ;
-- modifier le catalogue depuis un second poste, puis vérifier que le premier refuse d'écraser la version plus récente ;
+- modifier le catalogue depuis un second poste et vérifier le rechargement automatique sur le premier ;
+- ouvrir une fenêtre d'édition, modifier le catalogue depuis un second poste et vérifier que le rechargement attend la fermeture de la fenêtre ;
+- démarrer avec le partage indisponible, vérifier que le chemin est conservé, puis rétablir le réseau et utiliser **Recharger maintenant** ;
+- revenir au catalogue local et vérifier que le catalogue partagé n'est pas supprimé ;
 - recharger le catalogue avec `F5` ;
 - redétecter TopSolid sans créer de doublons.
 

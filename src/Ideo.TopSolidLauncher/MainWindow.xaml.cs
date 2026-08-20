@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Ideo.TopSolidLauncher.Models;
 using Ideo.TopSolidLauncher.Services;
 using Ideo.TopSolidLauncher.ViewModels;
@@ -22,10 +23,14 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel;
     private UpdateInfo? _availableUpdate;
     private Point _dragStart;
+    private readonly DispatcherTimer _catalogMonitorTimer;
+    private bool _catalogReloadPending;
+    private string? _unavailableSharedCatalogPath;
 
     public MainWindow()
     {
         InitializeComponent();
+        WindowThemeService.ApplyDarkTitleBar(this);
         _settings = _settingsService.Load();
         _catalogService = new CatalogService(_settings.CatalogPath);
 
@@ -36,14 +41,15 @@ public partial class MainWindow : Window
         }
         catch (Exception exception)
         {
-            LogService.Write("Le catalogue configuré est illisible. Repli sur le catalogue local.", exception);
-            MessageBox.Show(
-                "Le catalogue configuré ne peut pas être ouvert. Le catalogue local va être utilisé.\n\n" + exception.Message,
-                "Catalogue indisponible", MessageBoxButton.OK, MessageBoxImage.Warning);
+            LogService.Write("Le catalogue configuré est illisible. Repli temporaire sur le catalogue local.", exception);
+            _unavailableSharedCatalogPath = string.IsNullOrWhiteSpace(_settings.CatalogPath) ? null : _settings.CatalogPath;
             _catalogService.UseCatalog(AppPaths.DefaultCatalogPath);
-            _settings.CatalogPath = string.Empty;
-            _settingsService.Save(_settings);
             catalog = _catalogService.LoadOrCreate();
+            MessageBox.Show(
+                _unavailableSharedCatalogPath is null
+                    ? "Le catalogue local ne peut pas être ouvert. Un nouveau catalogue local a été chargé.\n\n" + exception.Message
+                    : "Le catalogue partagé est temporairement indisponible. Le catalogue local est utilisé pour cette session, sans oublier le chemin réseau.\n\n" + exception.Message,
+                "Catalogue indisponible", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         _viewModel = new MainViewModel(catalog, _settings, _catalogService, _settingsService);
@@ -64,14 +70,21 @@ public partial class MainWindow : Window
             WindowState = WindowState.Maximized;
         VersionText.Text = $"Version {UpdateService.CurrentVersion.ToString(3)}";
         UpdateCatalogLocation();
+        _catalogMonitorTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+        _catalogMonitorTimer.Tick += CatalogMonitorTimer_Tick;
+        Activated += MainWindow_Activated;
         Loaded += MainWindow_Loaded;
     }
 
-    private async void MainWindow_Loaded(object sender, RoutedEventArgs e) =>
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        _catalogMonitorTimer.Start();
         await CheckForUpdateAsync(showUpToDateMessage: false);
+    }
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
+        _catalogMonitorTimer.Stop();
         var bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, ActualWidth, ActualHeight) : RestoreBounds;
         _settings.WindowWidth = bounds.Width;
         _settings.WindowHeight = bounds.Height;
@@ -369,6 +382,13 @@ public partial class MainWindow : Window
         menu.IsOpen = true;
     }
 
+    private void OpenCatalogMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (CatalogStatusButton.ContextMenu is not { } menu) return;
+        menu.PlacementTarget = CatalogStatusButton;
+        menu.IsOpen = true;
+    }
+
     private void ToggleCompact_Click(object sender, RoutedEventArgs e) =>
         _viewModel.CompactMode = !_viewModel.CompactMode;
 
@@ -418,6 +438,7 @@ public partial class MainWindow : Window
             }
             _settings.CatalogPath = path;
             _settingsService.Save(_settings);
+            _unavailableSharedCatalogPath = null;
             _viewModel.Rebuild(catalog);
             UpdateCatalogLocation();
             _viewModel.StatusMessage = "Le catalogue partagé est actif";
@@ -425,6 +446,36 @@ public partial class MainWindow : Window
         catch (Exception exception)
         {
             MessageBox.Show(exception.Message, "Catalogue inaccessible", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void UseLocalCatalog_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_settings.CatalogPath) && _unavailableSharedCatalogPath is null)
+        {
+            _viewModel.StatusMessage = "Le catalogue local est déjà actif";
+            return;
+        }
+
+        if (MessageBox.Show(
+                "Revenir au catalogue local de ce poste ? Le catalogue partagé ne sera pas supprimé.",
+                "Catalogue local", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            _catalogService.UseCatalog(AppPaths.DefaultCatalogPath);
+            var catalog = _catalogService.LoadOrCreate();
+            _settings.CatalogPath = string.Empty;
+            _settingsService.Save(_settings);
+            _unavailableSharedCatalogPath = null;
+            _viewModel.Rebuild(catalog);
+            UpdateCatalogLocation();
+            _viewModel.StatusMessage = "Le catalogue local est actif";
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(exception.Message, "Catalogue local inaccessible", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -501,7 +552,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ReloadCatalog_Click(object sender, RoutedEventArgs e) => ReloadCatalog();
+    private void ReloadCatalog_Click(object sender, RoutedEventArgs e) => ReloadCatalog(showErrors: true);
 
     private void OpenLog_Click(object sender, RoutedEventArgs e)
     {
@@ -640,8 +691,25 @@ public partial class MainWindow : Window
 
     private void UpdateCatalogLocation()
     {
-        CatalogLocationText.Text = string.IsNullOrWhiteSpace(_settings.CatalogPath) ? "Catalogue local" : "Catalogue partagé";
-        CatalogLocationText.ToolTip = _catalogService.CatalogPath;
+        if (_unavailableSharedCatalogPath is not null)
+        {
+            CatalogLocationText.Text = "Catalogue partagé indisponible";
+            CatalogPathText.Text = _unavailableSharedCatalogPath;
+            CatalogStatusDot.Fill = new SolidColorBrush(Color.FromRgb(216, 155, 84));
+        }
+        else
+        {
+            var isShared = !string.IsNullOrWhiteSpace(_settings.CatalogPath) &&
+                           PathsEqual(_settings.CatalogPath, _catalogService.CatalogPath);
+            CatalogLocationText.Text = isShared ? "Catalogue partagé" : "Catalogue local";
+            CatalogPathText.Text = _catalogService.CatalogPath;
+            CatalogStatusDot.Fill = new SolidColorBrush(isShared
+                ? Color.FromRgb(77, 139, 212)
+                : Color.FromRgb(127, 184, 148));
+        }
+
+        CatalogStatusButton.ToolTip = CatalogPathText.Text;
+        CatalogPathText.ToolTip = CatalogPathText.Text;
     }
 
     private bool SaveCatalog(string message)
@@ -657,23 +725,70 @@ public partial class MainWindow : Window
             MessageBox.Show(
                 $"Les changements n'ont pas été enregistrés. Le catalogue va être rechargé pour éviter d'écraser des données.\n\n{exception.Message}",
                 "Enregistrement impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
-            ReloadCatalog();
+            ReloadCatalog(showErrors: false);
             return false;
         }
     }
 
-    private void ReloadCatalog()
+    private void ReloadCatalog(bool showErrors, bool externalChange = false)
     {
+        var previousPath = _catalogService.CatalogPath;
+        var reconnecting = _unavailableSharedCatalogPath is not null;
         try
         {
+            if (reconnecting)
+                _catalogService.UseCatalog(_unavailableSharedCatalogPath!);
+
             var catalog = _catalogService.LoadOrCreate();
             _viewModel.Rebuild(catalog);
-            _viewModel.StatusMessage = "Le catalogue a été rechargé";
+            if (reconnecting)
+                _unavailableSharedCatalogPath = null;
+            _catalogReloadPending = false;
+            UpdateCatalogLocation();
+            _viewModel.StatusMessage = externalChange
+                ? "Le catalogue partagé a été actualisé automatiquement"
+                : "Le catalogue a été rechargé";
         }
         catch (Exception exception)
         {
             LogService.Write("Impossible de recharger le catalogue.", exception);
-            MessageBox.Show(exception.Message, "Rechargement impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (reconnecting)
+            {
+                _catalogService.UseCatalog(previousPath);
+                try { _catalogService.LoadOrCreate(); } catch { /* Le catalogue local déjà chargé reste affiché. */ }
+            }
+            if (showErrors)
+                MessageBox.Show(exception.Message, "Rechargement impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void CatalogMonitorTimer_Tick(object? sender, EventArgs e)
+    {
+        if (_unavailableSharedCatalogPath is not null || !_catalogService.HasChangedExternally())
+            return;
+        if (!IsEnabled)
+        {
+            _catalogReloadPending = true;
+            return;
+        }
+        ReloadCatalog(showErrors: false, externalChange: true);
+    }
+
+    private void MainWindow_Activated(object? sender, EventArgs e)
+    {
+        if (!_catalogReloadPending || !IsEnabled) return;
+        ReloadCatalog(showErrors: false, externalChange: true);
+    }
+
+    private static bool PathsEqual(string first, string second)
+    {
+        try
+        {
+            return string.Equals(Path.GetFullPath(first), Path.GetFullPath(second), StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return string.Equals(first, second, StringComparison.OrdinalIgnoreCase);
         }
     }
 
@@ -711,7 +826,7 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Key.F5)
         {
-            ReloadCatalog();
+            ReloadCatalog(showErrors: true);
             e.Handled = true;
         }
     }

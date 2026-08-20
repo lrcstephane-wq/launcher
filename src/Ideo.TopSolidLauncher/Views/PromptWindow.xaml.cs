@@ -1,4 +1,5 @@
 using System.Windows;
+using Ideo.TopSolidLauncher.Services;
 
 namespace Ideo.TopSolidLauncher.Views;
 
@@ -9,6 +10,7 @@ public partial class PromptWindow : Window
     public PromptWindow(string title, string prompt, string initialValue = "")
     {
         InitializeComponent();
+        WindowThemeService.ApplyDarkTitleBar(this);
         Title = title;
         PromptText.Text = prompt;
         ValueTextBox.Text = initialValue;
@@ -23,7 +25,7 @@ public partial class PromptWindow : Window
     {
         if (string.IsNullOrWhiteSpace(ValueTextBox.Text))
         {
-            MessageBox.Show("Saisissez une valeur.", Title, MessageBoxButton.OK, MessageBoxImage.Information);
+            FormMessageText.Text = "Saisissez une valeur.";
             return;
         }
         DialogResult = true;

@@ -60,6 +60,21 @@ public sealed class CatalogService
         _knownWriteUtc = null;
     }
 
+    public bool HasChangedExternally()
+    {
+        try
+        {
+            if (_knownWriteUtc is null || !File.Exists(CatalogPath))
+                return false;
+            var currentWriteUtc = File.GetLastWriteTimeUtc(CatalogPath);
+            return Math.Abs((currentWriteUtc - _knownWriteUtc.Value).TotalMilliseconds) > 100;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public string ImportCardLogo(LauncherCard card)
     {
         if (string.IsNullOrWhiteSpace(card.LogoPath))

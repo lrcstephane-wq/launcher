@@ -1,5 +1,19 @@
 # Historique des versions
 
+## 0.3.1
+
+- thème sombre imposé sur toutes les fenêtres et sur la barre de titre Windows compatible ;
+- formulaires de cartes, groupes et tags plus compacts, lisibles et structurés ;
+- contrôles, listes de couleurs et messages de validation harmonisés ;
+- gestion des tags présentée sous forme de liste compacte ;
+- cartes plus grandes et grille responsive selon la largeur disponible ;
+- meilleure lisibilité du bandeau, des filtres, des cartes et du pied de fenêtre ;
+- état et chemin du catalogue visibles avec accès direct aux commandes principales ;
+- rechargement automatique d’un catalogue modifié par un autre poste ;
+- conservation du chemin partagé lorsqu’un serveur est temporairement indisponible ;
+- retour explicite vers le catalogue local ;
+- publication GitHub généralisée à la version déclarée dans le projet.
+
 ## 0.3.0
 
 - transformation du lanceur TopSolid en lanceur d'applications générique ;

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Ideo.TopSolidLauncher.Models;
+using Ideo.TopSolidLauncher.Services;
 
 namespace Ideo.TopSolidLauncher.Views;
 
@@ -12,6 +13,7 @@ public partial class TagManagerWindow : Window
     public TagManagerWindow(LauncherCatalog catalog)
     {
         InitializeComponent();
+        WindowThemeService.ApplyDarkTitleBar(this);
         _catalog = catalog;
         RefreshList();
     }

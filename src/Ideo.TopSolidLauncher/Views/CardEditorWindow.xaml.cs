@@ -17,6 +17,7 @@ public partial class CardEditorWindow : Window
     public CardEditorWindow(LauncherCatalog catalog, LauncherCard card, bool isNew)
     {
         InitializeComponent();
+        WindowThemeService.ApplyDarkTitleBar(this);
         _catalog = catalog;
         Result = card.Clone();
         if (isNew)
@@ -37,12 +38,23 @@ public partial class CardEditorWindow : Window
         if (GroupComboBox.SelectedIndex < 0)
             GroupComboBox.SelectedIndex = 0;
 
-        ColorComboBox.ItemsSource = new[]
+        var colors = new List<ColorChoice>
         {
-            "#2E69B3", "#265192", "#4D8BD4", "#697D93", "#6B5BA7",
-            "#C98247", "#B55858", "#4F8A6D", "#A1A1A1"
+            new("Bleu Idéo", "#2E69B3"),
+            new("Bleu profond", "#265192"),
+            new("Bleu clair", "#4D8BD4"),
+            new("Bleu gris", "#697D93"),
+            new("Violet", "#6B5BA7"),
+            new("Orange", "#C98247"),
+            new("Rouge", "#B55858"),
+            new("Vert", "#4F8A6D"),
+            new("Gris", "#A1A1A1")
         };
-        ColorComboBox.Text = Result.AccentColor;
+        if (colors.All(color => !color.Hex.Equals(Result.AccentColor, StringComparison.OrdinalIgnoreCase)))
+            colors.Add(new ColorChoice("Personnalisée", Result.AccentColor));
+        ColorTextBox.Text = Result.AccentColor;
+        ColorComboBox.ItemsSource = colors;
+        ColorComboBox.SelectedItem = colors.First(color => color.Hex.Equals(Result.AccentColor, StringComparison.OrdinalIgnoreCase));
 
         _tagChoices = catalog.Tags
             .OrderBy(tag => tag.Category).ThenBy(tag => tag.SortOrder).ThenBy(tag => tag.Name)
@@ -58,9 +70,10 @@ public partial class CardEditorWindow : Window
         var structure = CardValidationService.ValidateForSave(Result);
         if (!structure.IsValid)
         {
-            MessageBox.Show(structure.Message, "Raccourci incomplet", MessageBoxButton.OK, MessageBoxImage.Warning);
+            FormMessageText.Text = structure.Message;
             return;
         }
+        FormMessageText.Text = string.Empty;
         var readiness = CardValidationService.Validate(Result);
         if (!readiness.IsValid && MessageBox.Show(
                 $"Cette carte ne pourra pas être lancée sur ce poste pour le moment :\n\n{readiness.Message}\n\nL'enregistrer malgré tout ?",
@@ -73,6 +86,7 @@ public partial class CardEditorWindow : Window
     {
         try
         {
+            FormMessageText.Text = string.Empty;
             ReadForm();
             var process = new CardLauncherService().Launch(Result);
             MessageBox.Show(
@@ -161,15 +175,20 @@ public partial class CardEditorWindow : Window
         }
     }
 
-    private void ColorComboBox_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e) => UpdateColorPreview();
+    private void ColorComboBox_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (ColorComboBox.SelectedItem is ColorChoice color && ColorTextBox.Text != color.Hex)
+            ColorTextBox.Text = color.Hex;
+        UpdateColorPreview();
+    }
 
-    private void ColorComboBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e) => UpdateColorPreview();
+    private void ColorTextBox_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e) => UpdateColorPreview();
 
     private void UpdateColorPreview()
     {
         try
         {
-            ColorPreview.Background = (Brush)new BrushConverter().ConvertFromString(ColorComboBox.Text)!;
+            ColorPreview.Background = (Brush)new BrushConverter().ConvertFromString(ColorTextBox.Text)!;
         }
         catch
         {
@@ -186,7 +205,7 @@ public partial class CardEditorWindow : Window
         Result.Arguments = ArgumentsTextBox.Text.Trim();
         Result.WorkingDirectory = WorkingDirectoryTextBox.Text.Trim().Trim('"');
         Result.LogoPath = LogoTextBox.Text.Trim().Trim('"');
-        Result.AccentColor = NormalizeColor(ColorComboBox.Text);
+        Result.AccentColor = NormalizeColor(ColorTextBox.Text);
         Result.TagIds = _tagChoices.Where(choice => choice.IsSelected).Select(choice => choice.Tag.Id).ToList();
         Result.RunAsAdministrator = RunAsAdminCheckBox.IsChecked == true;
         Result.MinimizeAfterLaunch = MinimizeCheckBox.IsChecked == true;
@@ -226,4 +245,6 @@ public partial class CardEditorWindow : Window
         public event PropertyChangedEventHandler? PropertyChanged;
         public TagChoice(LauncherTag tag, bool selected) { Tag = tag; _isSelected = selected; }
     }
+
+    public sealed record ColorChoice(string Name, string Hex);
 }
