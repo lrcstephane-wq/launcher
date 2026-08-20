@@ -160,6 +160,7 @@ public sealed class CatalogService
         {
             tag.Name = string.IsNullOrWhiteSpace(tag.Name) ? "Tag sans nom" : tag.Name.Trim();
             tag.Category = string.IsNullOrWhiteSpace(tag.Category) ? "Autre" : tag.Category.Trim();
+            tag.Description = tag.Description?.Trim() ?? string.Empty;
             tag.Color = NormalizeColor(tag.Color, "#315D9D");
         }
 

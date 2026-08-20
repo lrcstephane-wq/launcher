@@ -16,11 +16,13 @@ public partial class TagEditorWindow : Window
             Id = isNew ? Guid.NewGuid() : tag.Id,
             Name = tag.Name,
             Category = tag.Category,
+            Description = tag.Description,
             Color = tag.Color,
             SortOrder = tag.SortOrder
         };
         NameTextBox.Text = tag.Name;
         CategoryTextBox.Text = tag.Category;
+        DescriptionTextBox.Text = tag.Description;
         ColorTextBox.Text = tag.Color;
         Title = isNew ? "Nouveau tag" : "Modifier le tag";
     }
@@ -46,6 +48,7 @@ public partial class TagEditorWindow : Window
 
         Result.Name = name;
         Result.Category = category;
+        Result.Description = DescriptionTextBox.Text.Trim();
         Result.Color = ColorTextBox.Text.Trim();
         DialogResult = true;
     }

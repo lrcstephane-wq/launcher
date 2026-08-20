@@ -31,7 +31,7 @@ Exemple : `Version = 6.22 OU 6.27` avec `Usage = Travail` affiche les cartes de 
 - catalogue par défaut : `%APPDATA%\Ideo\Launcher\catalog.json` ;
 - préférences personnelles : `%LOCALAPPDATA%\Ideo\Launcher\settings.json` ;
 - sauvegardes : dossier `Backups` situé à côté du catalogue ;
-- journaux : `%LOCALAPPDATA%\Ideo\TopSolidLauncher\Logs`.
+- journal : `%LOCALAPPDATA%\Ideo\TopSolidLauncher\launcher.log`.
 
 Les favoris, récents, dimensions de fenêtre et vues enregistrées restent propres au poste. Le catalogue (cartes, groupes et tags) peut être partagé.
 
@@ -58,4 +58,6 @@ dotnet publish .\src\Ideo.TopSolidLauncher\Ideo.TopSolidLauncher.csproj `
 
 - [Guide utilisateur](docs/USER_GUIDE.md)
 - [Architecture et format des données](docs/ARCHITECTURE.md)
+- [Plan de tests](docs/TEST_PLAN.md)
 - [Procédure de publication](docs/RELEASE.md)
+- [Historique des versions](docs/CHANGELOG.md)

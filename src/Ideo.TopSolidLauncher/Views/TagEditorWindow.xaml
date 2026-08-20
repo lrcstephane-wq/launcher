@@ -1,11 +1,11 @@
 <Window x:Class="Ideo.TopSolidLauncher.Views.TagEditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Tag" Width="470" Height="340" ResizeMode="NoResize"
+        Title="Tag" Width="470" Height="410" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <Grid Margin="26">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel>
             <TextBlock Text="Nom du tag" FontWeight="SemiBold" Margin="0,0,0,6" />
@@ -16,10 +16,14 @@
             <TextBox x:Name="CategoryTextBox" MaxLength="40" ToolTip="Exemples : Usage, Version, Chants, Année, Client" />
         </StackPanel>
         <StackPanel Grid.Row="2" Margin="0,16,0,0">
+            <TextBlock Text="Description facultative" FontWeight="SemiBold" Margin="0,0,0,6" />
+            <TextBox x:Name="DescriptionTextBox" MaxLength="120" />
+        </StackPanel>
+        <StackPanel Grid.Row="3" Margin="0,16,0,0">
             <TextBlock Text="Couleur (hexadécimal)" FontWeight="SemiBold" Margin="0,0,0,6" />
             <TextBox x:Name="ColorTextBox" MaxLength="9" />
         </StackPanel>
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button Content="Annuler" IsCancel="True" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" />
             <Button Content="Enregistrer" IsDefault="True" Click="Save_Click" />
         </StackPanel>

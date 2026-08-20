@@ -114,7 +114,7 @@
                                             <ItemsControl ItemsSource="{Binding Options}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <CheckBox IsChecked="{Binding IsSelected}">
+                                                        <CheckBox IsChecked="{Binding IsSelected}" ToolTip="{Binding Description}">
                                                             <StackPanel Orientation="Horizontal">
                                                                 <Border Width="8" Height="8" CornerRadius="4" Background="{Binding Color}" Margin="0,0,7,0" />
                                                                 <TextBlock Text="{Binding Name}" Foreground="{StaticResource MutedBrush}" />
@@ -273,7 +273,8 @@
                                                                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                                                         <ItemsControl.ItemTemplate>
                                                                             <DataTemplate>
-                                                                                <Border Background="{Binding Color}" CornerRadius="7" Padding="8,4" Margin="0,0,6,6">
+                                                                                <Border Background="{Binding Color}" CornerRadius="7" Padding="8,4" Margin="0,0,6,6"
+                                                                                        ToolTip="{Binding Description}">
                                                                                     <TextBlock Text="{Binding Name}" FontSize="10" FontWeight="SemiBold" />
                                                                                 </Border>
                                                                             </DataTemplate>

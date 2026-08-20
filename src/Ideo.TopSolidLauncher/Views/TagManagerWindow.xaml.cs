@@ -44,6 +44,7 @@ public partial class TagManagerWindow : Window
         }
         tag.Name = dialog.Result.Name;
         tag.Category = dialog.Result.Category;
+        tag.Description = dialog.Result.Description;
         tag.Color = dialog.Result.Color;
         HasChanges = true;
         RefreshList();

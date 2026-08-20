@@ -50,6 +50,18 @@ public partial class MainWindow : Window
         DataContext = _viewModel;
         Width = Math.Max(MinWidth, _settings.WindowWidth);
         Height = Math.Max(MinHeight, _settings.WindowHeight);
+        if (_settings.WindowLeft is { } left && _settings.WindowTop is { } top &&
+            left < SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 100 &&
+            top < SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - 100 &&
+            left + Width > SystemParameters.VirtualScreenLeft + 100 &&
+            top + Height > SystemParameters.VirtualScreenTop + 100)
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Left = left;
+            Top = top;
+        }
+        if (_settings.IsMaximized)
+            WindowState = WindowState.Maximized;
         VersionText.Text = $"Version {UpdateService.CurrentVersion.ToString(3)}";
         UpdateCatalogLocation();
         Loaded += MainWindow_Loaded;
@@ -60,11 +72,12 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        if (WindowState == WindowState.Normal)
-        {
-            _settings.WindowWidth = ActualWidth;
-            _settings.WindowHeight = ActualHeight;
-        }
+        var bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, ActualWidth, ActualHeight) : RestoreBounds;
+        _settings.WindowWidth = bounds.Width;
+        _settings.WindowHeight = bounds.Height;
+        _settings.WindowLeft = bounds.Left;
+        _settings.WindowTop = bounds.Top;
+        _settings.IsMaximized = WindowState == WindowState.Maximized;
         _settingsService.Save(_settings);
     }
 

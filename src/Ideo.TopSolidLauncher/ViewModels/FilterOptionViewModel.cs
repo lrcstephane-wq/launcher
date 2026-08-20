@@ -8,6 +8,7 @@ public sealed class FilterOptionViewModel : ObservableObject
 
     public LauncherTag Tag { get; }
     public string Name => Tag.Name;
+    public string Description => string.IsNullOrWhiteSpace(Tag.Description) ? $"{Tag.Category} · {Tag.Name}" : Tag.Description;
     public string Color => Tag.Color;
     public bool IsSelected
     {
