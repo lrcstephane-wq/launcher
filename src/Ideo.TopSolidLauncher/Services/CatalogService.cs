@@ -93,6 +93,8 @@ public sealed class CatalogService
 
     public void CreateCopyAt(string destinationPath, LauncherCatalog catalog)
     {
+        if (string.Equals(Path.GetFullPath(destinationPath), Path.GetFullPath(CatalogPath), StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Choisissez un emplacement différent du catalogue actuel.");
         var destinationFolder = Path.GetDirectoryName(destinationPath)
             ?? throw new InvalidOperationException("Le dossier de destination est introuvable.");
         Directory.CreateDirectory(destinationFolder);
@@ -131,7 +133,14 @@ public sealed class CatalogService
                      .OrderByDescending(File.GetCreationTimeUtc)
                      .Skip(BackupRetention))
         {
-            File.Delete(oldBackup);
+            try
+            {
+                File.Delete(oldBackup);
+            }
+            catch (Exception exception)
+            {
+                LogService.Write($"Impossible de supprimer l'ancienne sauvegarde « {oldBackup} ».", exception);
+            }
         }
     }
 
