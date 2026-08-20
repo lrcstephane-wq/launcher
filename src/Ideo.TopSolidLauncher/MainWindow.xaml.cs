@@ -9,10 +9,67 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => RefreshInstallations();
+        VersionText.Text = $"Version {UpdateService.CurrentVersion.ToString(3)}";
+        Loaded += MainWindow_Loaded;
+    }
+
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        RefreshInstallations();
+        await CheckForUpdateAsync(showUpToDateMessage: false);
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e) => RefreshInstallations();
+
+    private async void CheckUpdate_Click(object sender, RoutedEventArgs e) =>
+        await CheckForUpdateAsync(showUpToDateMessage: true);
+
+    private async Task CheckForUpdateAsync(bool showUpToDateMessage)
+    {
+        UpdateButton.IsEnabled = false;
+        try
+        {
+            LogService.Write("Recherche d'une mise à jour.");
+            var update = await UpdateService.FindUpdateAsync();
+            if (update is null)
+            {
+                LogService.Write("Aucune mise à jour disponible.");
+                if (showUpToDateMessage)
+                    MessageBox.Show("Le launcher est à jour.", "Mise à jour", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            LogService.Write($"Mise à jour disponible : {update.TagName}.");
+            var answer = MessageBox.Show(
+                $"La version {update.TagName.TrimStart('v', 'V')} est disponible.\n\nLa télécharger et l'installer maintenant ?",
+                "Mise à jour disponible",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+
+            if (answer != MessageBoxResult.Yes)
+                return;
+
+            StatusText.Text = "Téléchargement de la mise à jour…";
+            var progress = new Progress<int>(value => StatusText.Text = $"Téléchargement de la mise à jour : {value} %");
+            await UpdateService.DownloadAndInstallAsync(update, progress);
+            LogService.Write("Mise à jour téléchargée. Redémarrage du launcher.");
+            Application.Current.Shutdown();
+        }
+        catch (Exception exception)
+        {
+            LogService.Write("Échec de la mise à jour.", exception);
+            if (showUpToDateMessage)
+                MessageBox.Show(
+                    $"Impossible de vérifier ou d'installer la mise à jour.\n\n{exception.Message}",
+                    "Mise à jour",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+        }
+        finally
+        {
+            UpdateButton.IsEnabled = true;
+        }
+    }
 
     private void OpenLog_Click(object sender, RoutedEventArgs e)
     {
