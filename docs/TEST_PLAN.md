@@ -1,0 +1,47 @@
+# Plan de tests
+
+Ce plan est à exécuter sur Windows avant chaque publication stable.
+
+## Démarrage et migration
+
+- lancer l'exécutable sans aucun dossier `%APPDATA%\Ideo\Launcher` ;
+- vérifier la création du catalogue et des cartes TopSolid détectées ;
+- fermer puis rouvrir et vérifier que les données sont conservées ;
+- lancer depuis la version précédente et vérifier que la mise à jour ne supprime aucune donnée.
+
+## Cartes
+
+- créer une carte avec titre, cible, arguments, couleur, logo et plusieurs tags ;
+- tester puis enregistrer la commande ;
+- modifier le titre et le groupe ;
+- dupliquer puis supprimer la copie ;
+- importer un `.lnk` par le bouton et par glisser-déposer ;
+- vérifier une carte avec cible absente : message visible et lancement désactivé ;
+- lancer normalement puis en administrateur ;
+- vérifier le comportement avec et sans réduction automatique.
+
+## Organisation et filtres
+
+- créer, renommer, déplacer puis supprimer un groupe ;
+- réordonner les cartes par menu et glisser-déposer ;
+- ajouter/retirer un favori et lancer plusieurs cartes pour contrôler l'ordre des récents ;
+- sélectionner deux tags dans une catégorie et confirmer le `OU` ;
+- sélectionner une seconde catégorie et confirmer le `ET` ;
+- combiner recherche texte et filtres ;
+- enregistrer, rappeler puis supprimer une vue ;
+- vérifier les modes détaillé et compact.
+
+## Données et partage
+
+- exporter puis importer un catalogue ;
+- restaurer une sauvegarde depuis `Backups` ;
+- créer une copie dans un dossier partagé et contrôler les logos sur un second poste ;
+- modifier le catalogue depuis un second poste, puis vérifier que le premier refuse d'écraser la version plus récente ;
+- recharger le catalogue avec `F5` ;
+- redétecter TopSolid sans créer de doublons.
+
+## Mise à jour
+
+- publier une release de test contenant exactement `Launcher.exe` ;
+- vérifier la détection de version, la progression, le contrôle SHA-256, le remplacement et le redémarrage ;
+- vérifier le journal après une mise à jour réussie et après une erreur simulée.
