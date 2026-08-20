@@ -7,14 +7,6 @@ public static partial class TopSolidDiscovery
 {
     private const string MisslerRoot = @"C:\Missler";
 
-    // Different V6 deployments use one of these executable names.
-    private static readonly string[] ExecutableCandidates =
-    [
-        "TopSolid.exe",
-        "TopSolid'Wood.exe",
-        "TopSolidWood.exe"
-    ];
-
     public static IReadOnlyList<TopSolidInstallation> FindInstallations()
     {
         if (!Directory.Exists(MisslerRoot))
@@ -35,22 +27,17 @@ public static partial class TopSolidDiscovery
         if (!match.Success)
             return null;
 
+        var versionNumber = match.Groups[1].Value;
+        var displayVersion = $"6.{versionNumber}";
         var binFolder = Path.Combine(versionFolder, "bin");
-        var executable = ExecutableCandidates
-            .Select(name => Path.Combine(binFolder, name))
-            .FirstOrDefault(File.Exists);
+        var executable = Path.Combine(binFolder, $"top6{versionNumber}.exe");
 
-        if (executable is null)
-        {
-            executable = Directory.Exists(binFolder)
-                ? Directory.EnumerateFiles(binFolder, "TopSolid*.exe", SearchOption.TopDirectoryOnly)
-                    .FirstOrDefault(path => !Path.GetFileName(path).Contains("Update", StringComparison.OrdinalIgnoreCase))
-                : null;
-        }
-
-        return executable is null
+        return !File.Exists(executable)
             ? null
-            : new TopSolidInstallation($"6.{match.Groups[1].Value}", executable);
+            : new TopSolidInstallation(
+                displayVersion,
+                executable,
+                $"-fTOPSOLID/217/{displayVersion}");
     }
 
     private static int ParseVersion(string version) =>
