@@ -29,7 +29,7 @@ jobs:
       - name: Upload executable
         uses: actions/upload-artifact@v4
         with:
-          name: Launcher-Windows-x64-V0
+          name: Launcher-Windows-x64
           path: publish/Launcher.exe
           if-no-files-found: error
           retention-days: 30
