@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using Ideo.TopSolidLauncher.Models;
 using Ideo.TopSolidLauncher.Services;
 
@@ -210,12 +211,12 @@ public sealed class MainViewModel : ObservableObject
         var selectedIds = SelectedTagIds().ToHashSet();
         FilterCategories.Clear();
         foreach (var category in Catalog.Tags
-                     .OrderBy(tag => tag.Category)
-                     .ThenBy(tag => tag.SortOrder)
-                     .ThenBy(tag => tag.Name)
-                     .GroupBy(tag => string.IsNullOrWhiteSpace(tag.Category) ? "Autre" : tag.Category))
+                     .GroupBy(tag => string.IsNullOrWhiteSpace(tag.Category) ? "Autre" : tag.Category)
+                     .OrderBy(group => CategoryOrder(group.Key))
+                     .ThenBy(group => group.Key))
         {
-            var options = category.Select(tag => new FilterOptionViewModel(tag)).ToArray();
+            var options = category.OrderBy(tag => tag.SortOrder).ThenBy(tag => tag.Name)
+                .Select(tag => new FilterOptionViewModel(tag)).ToArray();
             foreach (var option in options)
             {
                 option.IsSelected = selectedIds.Contains(option.Tag.Id);
@@ -224,4 +225,15 @@ public sealed class MainViewModel : ObservableObject
             FilterCategories.Add(new FilterCategoryViewModel(category.Key, options));
         }
     }
+
+    private static int CategoryOrder(string category) => category.ToUpperInvariant() switch
+    {
+        "USAGE" => 0,
+        "VERSION" => 1,
+        "CHANTS" => 2,
+        "ANNÉE" or "ANNEE" => 3,
+        "CLIENT" => 4,
+        "APPLICATION" => 5,
+        _ => 100
+    };
 }

@@ -68,12 +68,14 @@ public sealed class CatalogService
         var source = ResolveAssetPath(card.LogoPath);
         if (!File.Exists(source))
             return card.LogoPath;
+        if (!Path.IsPathRooted(card.LogoPath))
+            return card.LogoPath;
 
         var extension = Path.GetExtension(source).ToLowerInvariant();
         if (extension is not (".png" or ".jpg" or ".jpeg" or ".bmp" or ".gif" or ".ico"))
             return string.Empty;
 
-        var relativePath = Path.Combine("Assets", $"{card.Id:N}{extension}");
+        var relativePath = Path.Combine("Assets", $"{card.Id:N}-{DateTime.UtcNow.Ticks:x}{extension}");
         var destination = Path.Combine(Path.GetDirectoryName(CatalogPath)!, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
         if (!string.Equals(Path.GetFullPath(source), Path.GetFullPath(destination), StringComparison.OrdinalIgnoreCase))
@@ -135,21 +137,62 @@ public sealed class CatalogService
 
     private static void Normalize(LauncherCatalog catalog)
     {
+        if (catalog.SchemaVersion > LauncherCatalog.CurrentSchemaVersion)
+            throw new InvalidDataException(
+                $"Ce catalogue utilise le format {catalog.SchemaVersion}, plus récent que celui pris en charge par cette version du launcher.");
+
         catalog.SchemaVersion = LauncherCatalog.CurrentSchemaVersion;
         catalog.Groups ??= [];
         catalog.Tags ??= [];
         catalog.Cards ??= [];
 
+        EnsureUniqueIds(catalog.Groups.Select(group => group.Id), "groupes");
+        EnsureUniqueIds(catalog.Tags.Select(tag => tag.Id), "tags");
+        EnsureUniqueIds(catalog.Cards.Select(card => card.Id), "cartes");
+
         if (catalog.Groups.Count == 0)
             catalog.Groups.Add(new LauncherGroup { Name = "Mes applications" });
+
+        foreach (var group in catalog.Groups)
+            group.Name = string.IsNullOrWhiteSpace(group.Name) ? "Groupe sans nom" : group.Name.Trim();
+
+        foreach (var tag in catalog.Tags)
+        {
+            tag.Name = string.IsNullOrWhiteSpace(tag.Name) ? "Tag sans nom" : tag.Name.Trim();
+            tag.Category = string.IsNullOrWhiteSpace(tag.Category) ? "Autre" : tag.Category.Trim();
+            tag.Color = NormalizeColor(tag.Color, "#315D9D");
+        }
 
         var defaultGroup = catalog.Groups.OrderBy(group => group.SortOrder).First().Id;
         foreach (var card in catalog.Cards)
         {
             card.Title = string.IsNullOrWhiteSpace(card.Title) ? "Application sans titre" : card.Title.Trim();
+            card.Subtitle = card.Subtitle?.Trim() ?? string.Empty;
+            card.TargetPath = card.TargetPath?.Trim() ?? string.Empty;
+            card.Arguments = card.Arguments?.Trim() ?? string.Empty;
+            card.WorkingDirectory = card.WorkingDirectory?.Trim() ?? string.Empty;
+            card.LogoPath = card.LogoPath?.Trim() ?? string.Empty;
+            card.AccentColor = NormalizeColor(card.AccentColor, "#2E69B3");
             card.GroupId = catalog.Groups.Any(group => group.Id == card.GroupId) ? card.GroupId : defaultGroup;
             card.TagIds ??= [];
             card.TagIds = card.TagIds.Distinct().Where(id => catalog.Tags.Any(tag => tag.Id == id)).ToList();
         }
+    }
+
+    private static void EnsureUniqueIds(IEnumerable<Guid> ids, string collectionName)
+    {
+        var values = ids.ToArray();
+        if (values.Any(id => id == Guid.Empty) || values.Distinct().Count() != values.Length)
+            throw new InvalidDataException($"Le catalogue contient des identifiants invalides ou dupliqués dans les {collectionName}.");
+    }
+
+    private static string NormalizeColor(string? color, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(color) || color[0] != '#')
+            return fallback;
+        var value = color[1..];
+        return value.Length is 6 or 8 && uint.TryParse(value, System.Globalization.NumberStyles.HexNumber, null, out _)
+            ? $"#{value.ToUpperInvariant()}"
+            : fallback;
     }
 }

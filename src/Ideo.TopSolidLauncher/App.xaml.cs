@@ -23,7 +23,7 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        LogService.Write($"Démarrage du launcher {Environment.Version} sur {Environment.OSVersion}.");
+        LogService.Write($"Démarrage du launcher {UpdateService.CurrentVersion.ToString(3)} sur {Environment.OSVersion} (.NET {Environment.Version}).");
         base.OnStartup(e);
     }
 }

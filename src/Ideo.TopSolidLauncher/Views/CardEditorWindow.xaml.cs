@@ -49,6 +49,7 @@ public partial class CardEditorWindow : Window
             .Select(tag => new TagChoice(tag, Result.TagIds.Contains(tag.Id)))
             .ToList();
         TagsItemsControl.ItemsSource = _tagChoices;
+        UpdateColorPreview();
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)

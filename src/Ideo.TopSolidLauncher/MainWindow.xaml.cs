@@ -405,11 +405,30 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog { Title = "Importer un catalogue", Filter = "Catalogue Idéo|*.json", CheckFileExists = true };
         if (dialog.ShowDialog(this) != true) return;
+        ImportCatalogFrom(dialog.FileName, "Importer le catalogue");
+    }
+
+    private void RestoreBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var backupFolder = Path.Combine(Path.GetDirectoryName(_catalogService.CatalogPath)!, "Backups");
+        var dialog = new OpenFileDialog
+        {
+            Title = "Restaurer une sauvegarde du catalogue",
+            Filter = "Sauvegardes du catalogue|catalog-*.json|Fichiers JSON|*.json",
+            CheckFileExists = true,
+            InitialDirectory = Directory.Exists(backupFolder) ? backupFolder : Path.GetDirectoryName(_catalogService.CatalogPath)
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        ImportCatalogFrom(dialog.FileName, "Restaurer la sauvegarde");
+    }
+
+    private void ImportCatalogFrom(string path, string title)
+    {
         try
         {
-            var imported = _catalogService.Import(dialog.FileName);
+            var imported = _catalogService.Import(path);
             if (MessageBox.Show($"Remplacer le catalogue actuel par {imported.Cards.Count} carte(s) importée(s) ?\n\nUne sauvegarde automatique sera créée.",
-                    "Importer le catalogue", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                    title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
             _catalogService.Save(imported);
             _viewModel.Rebuild(imported);

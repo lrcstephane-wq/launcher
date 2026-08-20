@@ -57,6 +57,8 @@ Un dossier Nextcloud, OneDrive ou réseau peut être utilisé. Les favoris, réc
 - **Importer le catalogue** remplace le catalogue courant après confirmation ;
 - chaque modification crée automatiquement une sauvegarde dans le dossier `Backups` situé à côté du catalogue.
 
+Le menu **Restaurer une sauvegarde** ouvre directement ce dossier et remplace le catalogue après confirmation, tout en sauvegardant d'abord son état actuel.
+
 ## Diagnostic
 
 Le menu **Ouvrir le journal** affiche le dossier contenant les traces de lancement et les erreurs. En cas de cible invalide, la carte reste visible mais son bouton **Lancer** est désactivé et la raison est affichée.

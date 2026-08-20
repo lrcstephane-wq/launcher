@@ -83,6 +83,7 @@
                                     <MenuItem Header="Recharger le catalogue" Click="ReloadCatalog_Click" />
                                     <MenuItem Header="Choisir un catalogue partagé…" Click="ChooseCatalog_Click" />
                                     <MenuItem Header="Importer un catalogue…" Click="ImportCatalog_Click" />
+                                    <MenuItem Header="Restaurer une sauvegarde…" Click="RestoreBackup_Click" />
                                     <MenuItem Header="Exporter le catalogue…" Click="ExportCatalog_Click" />
                                     <MenuItem Header="Ouvrir le dossier du catalogue" Click="OpenCatalogFolder_Click" />
                                     <Separator />

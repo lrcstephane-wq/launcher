@@ -20,6 +20,12 @@ public partial class TagManagerWindow : Window
     {
         var dialog = new TagEditorWindow(new LauncherTag { Color = "#2E69B3", SortOrder = _catalog.Tags.Count }, true) { Owner = this };
         if (dialog.ShowDialog() != true) return;
+        if (IsDuplicate(dialog.Result))
+        {
+            MessageBox.Show("Un tag portant ce nom existe déjà dans cette catégorie.", "Tag en double",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
         _catalog.Tags.Add(dialog.Result);
         HasChanges = true;
         RefreshList();
@@ -30,6 +36,12 @@ public partial class TagManagerWindow : Window
         if ((sender as FrameworkElement)?.DataContext is not LauncherTag tag) return;
         var dialog = new TagEditorWindow(tag, false) { Owner = this };
         if (dialog.ShowDialog() != true) return;
+        if (IsDuplicate(dialog.Result, tag.Id))
+        {
+            MessageBox.Show("Un tag portant ce nom existe déjà dans cette catégorie.", "Tag en double",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
         tag.Name = dialog.Result.Name;
         tag.Category = dialog.Result.Category;
         tag.Color = dialog.Result.Color;
@@ -57,4 +69,9 @@ public partial class TagManagerWindow : Window
 
     private void RefreshList() => TagsList.ItemsSource = _catalog.Tags
         .OrderBy(tag => tag.Category).ThenBy(tag => tag.SortOrder).ThenBy(tag => tag.Name).ToArray();
+
+    private bool IsDuplicate(LauncherTag candidate, Guid? excludedId = null) => _catalog.Tags.Any(tag =>
+        tag.Id != excludedId &&
+        tag.Name.Equals(candidate.Name, StringComparison.OrdinalIgnoreCase) &&
+        tag.Category.Equals(candidate.Category, StringComparison.OrdinalIgnoreCase));
 }

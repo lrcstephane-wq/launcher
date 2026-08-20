@@ -7,13 +7,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Launcher</AssemblyName>
     <RootNamespace>Ideo.TopSolidLauncher</RootNamespace>
-    <Version>0.2.0</Version>
-    <FileVersion>0.2.0.0</FileVersion>
-    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <Version>0.3.0</Version>
+    <FileVersion>0.3.0.0</FileVersion>
+    <AssemblyVersion>0.3.0.0</AssemblyVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\IdeoLauncher.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="Assets\IdeoBackground.jpg" />
+    <Resource Include="Assets\IdeoLauncher.ico" />
     <Resource Include="Assets\IdeoLogo.png" />
     <Resource Include="Assets\IdeoMark.png" />
   </ItemGroup>
