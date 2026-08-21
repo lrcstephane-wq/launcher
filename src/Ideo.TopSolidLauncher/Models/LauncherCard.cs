@@ -11,6 +11,7 @@ public sealed class LauncherCard
     public string WorkingDirectory { get; set; } = string.Empty;
     public string LogoPath { get; set; } = string.Empty;
     public string AccentColor { get; set; } = "#2E69B3";
+    public List<LauncherQuickAccess> QuickAccessLinks { get; set; } = [];
     public List<Guid> TagIds { get; set; } = [];
     public int SortOrder { get; set; }
     public bool RunAsAdministrator { get; set; }
@@ -29,6 +30,7 @@ public sealed class LauncherCard
             WorkingDirectory = WorkingDirectory,
             LogoPath = LogoPath,
             AccentColor = AccentColor,
+            QuickAccessLinks = QuickAccessLinks.Select(link => link.Clone()).ToList(),
             TagIds = [.. TagIds],
             SortOrder = SortOrder,
             RunAsAdministrator = RunAsAdministrator,

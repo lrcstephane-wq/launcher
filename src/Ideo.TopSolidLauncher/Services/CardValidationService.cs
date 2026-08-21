@@ -11,6 +11,8 @@ public static class CardValidationService
             return CardValidationResult.Invalid("Le titre est obligatoire.");
         if (string.IsNullOrWhiteSpace(card.TargetPath))
             return CardValidationResult.Invalid("La cible est obligatoire.");
+        if (card.QuickAccessLinks.Any(link => string.IsNullOrWhiteSpace(link.Label) || string.IsNullOrWhiteSpace(link.Path)))
+            return CardValidationResult.Invalid("Chaque accès rapide doit avoir un nom et un chemin.");
         return CardValidationResult.Valid();
     }
 

@@ -16,6 +16,7 @@ public sealed class MainViewModel : ObservableObject
     public SettingsService SettingsService { get; }
     public ObservableCollection<FilterCategoryViewModel> FilterCategories { get; } = [];
     public ObservableCollection<GroupViewModel> VisibleGroups { get; } = [];
+    public ObservableCollection<SavedView> SavedViews { get; }
 
     public string SearchText
     {
@@ -46,11 +47,22 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    public bool ShowFavoritesOnly
+    {
+        get => Settings.ShowFavoritesOnly;
+        set
+        {
+            if (Settings.ShowFavoritesOnly == value) return;
+            Settings.ShowFavoritesOnly = value;
+            OnPropertyChanged();
+            SettingsService.Save(Settings);
+            RefreshVisibleCards();
+        }
+    }
+
     public int VisibleCardCount => VisibleGroups.Sum(group => group.Cards.Count);
     public int TotalCardCount => Catalog.Cards.Count;
     public string CountLabel => $"{VisibleCardCount} sur {TotalCardCount} raccourcis";
-    public IEnumerable<SavedView> SavedViews => Settings.SavedViews;
-
     public MainViewModel(
         LauncherCatalog catalog,
         UserSettings settings,
@@ -61,6 +73,7 @@ public sealed class MainViewModel : ObservableObject
         Settings = settings;
         CatalogService = catalogService;
         SettingsService = settingsService;
+        SavedViews = new ObservableCollection<SavedView>(settings.SavedViews);
         BuildFilters();
         RefreshVisibleCards();
     }
@@ -71,7 +84,6 @@ public sealed class MainViewModel : ObservableObject
             Catalog = replacement;
         BuildFilters();
         RefreshVisibleCards();
-        OnPropertyChanged(nameof(SavedViews));
     }
 
     public IReadOnlyList<Guid> SelectedTagIds() => FilterCategories
@@ -84,6 +96,7 @@ public sealed class MainViewModel : ObservableObject
     {
         foreach (var option in FilterCategories.SelectMany(category => category.Options))
             option.IsSelected = false;
+        ShowFavoritesOnly = false;
         SearchText = string.Empty;
         RefreshVisibleCards();
     }
@@ -92,6 +105,7 @@ public sealed class MainViewModel : ObservableObject
     {
         foreach (var option in FilterCategories.SelectMany(category => category.Options))
             option.IsSelected = view.SelectedTagIds.Contains(option.Tag.Id);
+        ShowFavoritesOnly = view.ShowFavoritesOnly;
         SearchText = view.SearchText;
         RefreshVisibleCards();
     }
@@ -102,19 +116,18 @@ public sealed class MainViewModel : ObservableObject
         {
             Name = name.Trim(),
             SearchText = SearchText,
-            SelectedTagIds = SelectedTagIds().ToList()
+            SelectedTagIds = SelectedTagIds().ToList(),
+            ShowFavoritesOnly = ShowFavoritesOnly
         };
-        Settings.SavedViews.Add(view);
-        SettingsService.Save(Settings);
-        OnPropertyChanged(nameof(SavedViews));
+        SavedViews.Add(view);
+        PersistSavedViews();
         return view;
     }
 
     public void DeleteSavedView(SavedView view)
     {
-        Settings.SavedViews.RemoveAll(item => item.Id == view.Id);
-        SettingsService.Save(Settings);
-        OnPropertyChanged(nameof(SavedViews));
+        SavedViews.Remove(view);
+        PersistSavedViews();
     }
 
     public void ToggleFavorite(CardViewModel card)
@@ -168,6 +181,7 @@ public sealed class MainViewModel : ObservableObject
         {
             var cards = Catalog.Cards
                 .Where(card => card.GroupId == group.Id)
+                .Where(card => !ShowFavoritesOnly || Settings.FavoriteCardIds.Contains(card.Id))
                 .Where(card => selectedByCategory.All(category => card.TagIds.Any(category.Ids.Contains)))
                 .Where(card => MatchesSearch(card, search))
                 .Select(card => new CardViewModel(
@@ -182,7 +196,7 @@ public sealed class MainViewModel : ObservableObject
                 .ToArray();
 
             if (cards.Length > 0 || string.IsNullOrEmpty(search) && selectedByCategory.Length == 0)
-                VisibleGroups.Add(new GroupViewModel(group, cards));
+                VisibleGroups.Add(new GroupViewModel(group, cards, Settings.CollapsedGroupIds.Contains(group.Id)));
         }
 
         OnPropertyChanged(nameof(VisibleCardCount));
@@ -196,8 +210,15 @@ public sealed class MainViewModel : ObservableObject
             return true;
 
         var tagText = string.Join(' ', Catalog.Tags.Where(tag => card.TagIds.Contains(tag.Id)).Select(tag => tag.Name));
-        var haystack = $"{card.Title} {card.Subtitle} {card.TargetPath} {card.Arguments} {tagText}";
+        var quickAccessText = string.Join(' ', card.QuickAccessLinks.Select(link => $"{link.Label} {link.Path}"));
+        var haystack = $"{card.Title} {card.Subtitle} {card.TargetPath} {card.Arguments} {tagText} {quickAccessText}";
         return haystack.Contains(search, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private void PersistSavedViews()
+    {
+        Settings.SavedViews = SavedViews.ToList();
+        SettingsService.Save(Settings);
     }
 
     private int RecentIndex(Guid cardId)

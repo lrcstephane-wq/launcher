@@ -10,67 +10,65 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="#7F91A8" />
-            <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
         </Style>
         <Style x:Key="CardBorderStyle" TargetType="Border">
-            <Setter Property="Height" Value="306" />
+            <Setter Property="Height" Value="390" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Background" Value="#202C3B" />
             <Setter Property="BorderBrush" Value="#3B4A5E" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="14" />
-            <Setter Property="Cursor" Value="Arrow" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                     <Setter Property="Height" Value="232" />
                 </DataTrigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="#55739A" />
-                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True"><Setter Property="BorderBrush" Value="#55739A" /></Trigger>
             </Style.Triggers>
+        </Style>
+        <Style x:Key="CardDetailedSection" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Visible" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="QuickAccessButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Width" Value="30" /><Setter Property="Height" Value="28" />
+            <Setter Property="MinHeight" Value="28" /><Setter Property="Padding" Value="0" />
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" /><Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="#8BB9EF" />
         </Style>
     </Window.Resources>
 
     <Grid Background="{StaticResource BackgroundBrush}">
         <Image Source="Assets/IdeoBackground.jpg" Stretch="UniformToFill" Opacity="0.12" IsHitTestVisible="False" />
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="102" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="40" />
-            </Grid.RowDefinitions>
+            <Grid.RowDefinitions><RowDefinition Height="102"/><RowDefinition Height="*"/><RowDefinition Height="40"/></Grid.RowDefinitions>
 
             <Border Background="#F0151E2A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="26,0">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="255" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="255"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="Assets/IdeoLogo.png" Width="158" Height="62" Stretch="Uniform" />
                         <Border Background="#2E69B3" CornerRadius="5" Padding="7,3" Margin="10,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="LAUNCHER" FontSize="9" FontWeight="Bold" />
                         </Border>
                     </StackPanel>
-
                     <Border Grid.Column="1" Background="#111A26" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
                             CornerRadius="11" Height="48" MaxWidth="650" Margin="22,0" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <TextBlock Text="⌕" FontSize="24" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            <TextBox x:Name="SearchTextBox" Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Background="Transparent"
-                                     BorderThickness="0" Padding="0" FontSize="15" ToolTip="Rechercher un titre, un tag, une version ou une commande" />
-                            <Button Grid.Column="2" Content="×" Style="{StaticResource GhostButton}" Click="ClearSearch_Click"
-                                    ToolTip="Effacer la recherche" Margin="2" />
+                            <TextBox x:Name="SearchTextBox" Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="Transparent" BorderThickness="0" Padding="0" FontSize="15"
+                                     ToolTip="Rechercher un titre, un tag, une version, un dossier ou une commande" />
+                            <Button Grid.Column="2" Content="×" Style="{StaticResource GhostButton}" Click="ClearSearch_Click" ToolTip="Effacer la recherche" Margin="2" />
                         </Grid>
                     </Border>
-
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Content="+  Nouvelle carte" Click="NewCard_Click" Margin="0,0,9,0" />
-                        <Button x:Name="UpdateButton" Content="Mise à jour" Click="CheckUpdate_Click"
-                                Style="{StaticResource SecondaryButton}" Margin="0,0,9,0" />
+                        <Button x:Name="UpdateButton" Content="Mise à jour" Click="CheckUpdate_Click" Style="{StaticResource SecondaryButton}" Margin="0,0,9,0" />
                         <Button x:Name="SettingsButton" Content="•••" Width="48" Padding="0" Style="{StaticResource SecondaryButton}"
                                 Click="OpenSettingsMenu_Click" ToolTip="Options">
                             <Button.ContextMenu>
@@ -89,6 +87,7 @@
                                     <MenuItem Header="Exporter le catalogue…" Click="ExportCatalog_Click" />
                                     <MenuItem Header="Ouvrir le dossier du catalogue" Click="OpenCatalogFolder_Click" />
                                     <Separator />
+                                    <MenuItem Header="Téléchargements TopSolid…" Click="OpenTopSolidDownloads_Click" />
                                     <MenuItem Header="Ouvrir le journal" Click="OpenLog_Click" />
                                 </ContextMenu>
                             </Button.ContextMenu>
@@ -98,68 +97,79 @@
             </Border>
 
             <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="272"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-
-                <Border Background="#D9141D29" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" Padding="20,22">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
-                            <Grid Margin="2,0,2,14">
-                                <TextBlock Text="FILTRES" Style="{StaticResource SidebarHeading}" VerticalAlignment="Center" />
-                                <Button Content="Réinitialiser" HorizontalAlignment="Right" Style="{StaticResource GhostButton}"
-                                        FontSize="11" Click="ClearFilters_Click" />
-                            </Grid>
-                            <ItemsControl ItemsSource="{Binding FilterCategories}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Margin="2,0,0,18">
-                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,7" />
-                                            <ItemsControl ItemsSource="{Binding Options}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <CheckBox IsChecked="{Binding IsSelected}" ToolTip="{Binding Description}">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <Border Width="8" Height="8" CornerRadius="4" Background="{Binding Color}" Margin="0,0,7,0" />
-                                                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource MutedBrush}" />
-                                                            </StackPanel>
-                                                        </CheckBox>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <Separator Background="{StaticResource BorderBrush}" Margin="0,2,0,18" />
-                            <Grid Margin="2,0,2,10">
-                                <TextBlock Text="VUES ENREGISTRÉES" Style="{StaticResource SidebarHeading}" VerticalAlignment="Center" />
-                                <Button Content="+" Width="30" Height="28" Padding="0" HorizontalAlignment="Right"
-                                        Style="{StaticResource GhostButton}" Click="SaveView_Click" ToolTip="Enregistrer les filtres actuels" />
-                            </Grid>
-                            <ItemsControl ItemsSource="{Binding SavedViews}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#182333" CornerRadius="8" Padding="8,4" Margin="0,0,0,5">
-                                            <Grid>
-                                                <Button Content="{Binding Name}" HorizontalContentAlignment="Left" Style="{StaticResource GhostButton}"
-                                                        Padding="4" Click="ApplySavedView_Click" />
-                                                <Button Content="×" HorizontalAlignment="Right" Style="{StaticResource GhostButton}"
-                                                        Padding="6" Click="DeleteSavedView_Click" ToolTip="Supprimer cette vue" />
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <Border Background="#15263A" BorderBrush="#2B4E77" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,18,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="Astuce" FontWeight="SemiBold" Foreground="#8BB9EF" />
-                                    <TextBlock Text="Dans une catégorie : OU&#x0a;Entre catégories : ET"
-                                               Margin="0,4,0,0" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+                <Grid.ColumnDefinitions><ColumnDefinition x:Name="FilterColumn" Width="272"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Border x:Name="FilterSidebar" Background="#D9141D29" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <Grid>
+                        <ScrollViewer x:Name="FilterContent" VerticalScrollBarVisibility="Auto" Padding="20,22">
+                            <StackPanel>
+                                <Grid Margin="2,0,24,14">
+                                    <TextBlock Text="FILTRES" Style="{StaticResource SidebarHeading}" VerticalAlignment="Center" />
+                                    <Button Content="Réinitialiser" HorizontalAlignment="Right" Style="{StaticResource GhostButton}"
+                                            FontSize="11" Click="ClearFilters_Click" />
+                                </Grid>
+                                <Border Background="#18283B" BorderBrush="#2B4E77" BorderThickness="1" CornerRadius="9" Padding="10,5" Margin="2,0,2,16">
+                                    <CheckBox IsChecked="{Binding ShowFavoritesOnly}">
+                                        <StackPanel Orientation="Horizontal"><TextBlock Text="★" Foreground="#E3BD62" Margin="0,0,7,0"/><TextBlock Text="Favoris uniquement"/></StackPanel>
+                                    </CheckBox>
+                                </Border>
+                                <ItemsControl ItemsSource="{Binding FilterCategories}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="2,0,0,18">
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,7" />
+                                                <ItemsControl ItemsSource="{Binding Options}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding IsSelected}" ToolTip="{Binding Description}">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Border Width="8" Height="8" CornerRadius="4" Background="{Binding Color}" Margin="0,0,7,0" />
+                                                                    <TextBlock Text="{Binding Name}" Foreground="{StaticResource MutedBrush}" />
+                                                                </StackPanel>
+                                                            </CheckBox>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Separator Margin="0,2,0,18" />
+                                <Grid Margin="2,0,2,10">
+                                    <TextBlock Text="VUES ENREGISTRÉES" Style="{StaticResource SidebarHeading}" VerticalAlignment="Center" />
+                                    <Button Content="+" Width="30" Height="28" Padding="0" HorizontalAlignment="Right"
+                                            Style="{StaticResource GhostButton}" Click="SaveView_Click" ToolTip="Enregistrer les filtres actuels" />
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding SavedViews}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#182333" CornerRadius="8" Padding="8,4" Margin="0,0,0,5">
+                                                <Grid>
+                                                    <Button Content="{Binding Name}" HorizontalContentAlignment="Left" Style="{StaticResource GhostButton}" Padding="4" Click="ApplySavedView_Click" />
+                                                    <Button Content="×" HorizontalAlignment="Right" Style="{StaticResource GhostButton}" Padding="6" Click="DeleteSavedView_Click" ToolTip="Supprimer cette vue" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Border Background="#15263A" BorderBrush="#2B4E77" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,18,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Astuce" FontWeight="SemiBold" Foreground="#8BB9EF" />
+                                        <TextBlock Text="Dans une catégorie : OU&#x0a;Entre catégories : ET" Margin="0,4,0,0" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel Margin="2,22,2,0">
+                                    <TextBlock Text="RESSOURCES" Style="{StaticResource SidebarHeading}" Margin="0,0,0,9" />
+                                    <Button Click="OpenTopSolidDownloads_Click" Style="{StaticResource SecondaryButton}" HorizontalContentAlignment="Left" Padding="12,9"
+                                            ToolTip="Ouvrir la page officielle des versions actuelles et anciennes">
+                                        <StackPanel Orientation="Horizontal"><TextBlock Text="Téléchargements TopSolid"/><TextBlock Text=" ↗" Foreground="#8BB9EF"/></StackPanel>
+                                    </Button>
                                 </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </ScrollViewer>
+                            </StackPanel>
+                        </ScrollViewer>
+                        <Button x:Name="FilterPaneToggleButton" Content="‹" Width="30" Height="34" MinHeight="34" Padding="0"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,18,8,0"
+                                Style="{StaticResource SecondaryButton}" Click="ToggleFilterPane_Click" ToolTip="Masquer les filtres" Panel.ZIndex="4" />
+                    </Grid>
                 </Border>
 
                 <Grid Grid.Column="1">
@@ -167,7 +177,11 @@
                     <Grid Margin="30,22,30,16">
                         <StackPanel>
                             <TextBlock Text="Mes applications" FontSize="25" FontWeight="Bold" />
-                            <TextBlock Text="{Binding CountLabel}" Foreground="{StaticResource MutedBrush}" Margin="0,3,0,0" />
+                            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                <TextBlock Text="{Binding CountLabel}" Foreground="{StaticResource MutedBrush}" />
+                                <TextBlock Text="  •  " Foreground="#536176" />
+                                <TextBlock x:Name="CurrentDateText" Foreground="#8BB9EF" />
+                            </StackPanel>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                             <TextBlock Text="Glissez les cartes pour les réorganiser" Foreground="#78899E" FontSize="11" Margin="0,0,14,0" VerticalAlignment="Center" />
@@ -179,13 +193,14 @@
                         <ItemsControl ItemsSource="{Binding VisibleGroups}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#B316202D" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                                            CornerRadius="15" Padding="20" Margin="0,0,12,20" AllowDrop="True"
-                                            DragOver="Group_DragOver" Drop="Group_Drop">
+                                    <Border Background="#B316202D" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="15"
+                                            Padding="20" Margin="0,0,12,20" AllowDrop="True" DragOver="Group_DragOver" Drop="Group_Drop">
                                         <StackPanel>
                                             <Grid Margin="0,0,0,14">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding Name}" FontSize="19" FontWeight="SemiBold" />
+                                                    <Button Content="{Binding CollapseGlyph}" Style="{StaticResource GhostButton}" Width="32" Padding="0"
+                                                            Margin="0,0,8,0" Click="ToggleGroupCollapse_Click" ToolTip="Replier ou déplier le groupe" />
+                                                    <TextBlock Text="{Binding Name}" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Center" />
                                                     <Border Background="#28374A" CornerRadius="7" Padding="8,3" Margin="10,0,0,0">
                                                         <TextBlock Text="{Binding CountLabel}" FontSize="10" Foreground="{StaticResource MutedBrush}" />
                                                     </Border>
@@ -198,105 +213,134 @@
                                                                 <MenuItem Header="Renommer le groupe" Click="RenameGroup_Click" />
                                                                 <MenuItem Header="Monter le groupe" Click="MoveGroupUp_Click" />
                                                                 <MenuItem Header="Descendre le groupe" Click="MoveGroupDown_Click" />
-                                                                <Separator />
-                                                                <MenuItem Header="Supprimer le groupe" Click="DeleteGroup_Click" />
+                                                                <Separator /><MenuItem Header="Supprimer le groupe" Click="DeleteGroup_Click" />
                                                             </ContextMenu>
                                                         </Button.ContextMenu>
                                                     </Button>
                                                 </StackPanel>
                                             </Grid>
-
                                             <ItemsControl ItemsSource="{Binding Cards}">
+                                                <ItemsControl.Style>
+                                                    <Style TargetType="ItemsControl">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers><DataTrigger Binding="{Binding IsCollapsed}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers>
+                                                    </Style>
+                                                </ItemsControl.Style>
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
-                                                        <controls:ResponsiveWrapPanel TargetItemWidth="314" MinItemWidth="276" MaxItemWidth="350"
-                                                                                      HorizontalSpacing="16" VerticalSpacing="16" />
+                                                        <controls:ResponsiveWrapPanel TargetItemWidth="370" MinItemWidth="330" MaxItemWidth="410" HorizontalSpacing="16" VerticalSpacing="16" />
                                                     </ItemsPanelTemplate>
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <Border Style="{StaticResource CardBorderStyle}" AllowDrop="True"
-                                                                PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown"
-                                                                MouseMove="Card_MouseMove" DragOver="Card_DragOver" Drop="Card_Drop">
-                                                            <Border.Effect>
-                                                                <DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.23" Color="#05080C" />
-                                                            </Border.Effect>
+                                                                PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown" MouseMove="Card_MouseMove"
+                                                                DragOver="Card_DragOver" Drop="Card_Drop">
+                                                            <Border.Effect><DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.23" Color="#05080C" /></Border.Effect>
                                                             <Grid ClipToBounds="True">
-                                                                <Grid.RowDefinitions>
-                                                                    <RowDefinition Height="5"/><RowDefinition Height="*"/>
-                                                                </Grid.RowDefinitions>
+                                                                <Grid.RowDefinitions><RowDefinition Height="10"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                                                                 <Border Background="{Binding AccentColor}" CornerRadius="14,14,0,0" />
-                                                                <Grid Grid.Row="1" Margin="16,13,16,14">
+                                                                <Grid Grid.Row="1" Margin="18,14,18,16">
                                                                     <Grid.RowDefinitions>
-                                                                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
-                                                                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                                                                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                                                                        <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                                                                     </Grid.RowDefinitions>
                                                                     <Grid>
                                                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                                        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                                                                                   ToolTip="{Binding Title}" VerticalAlignment="Center" />
-                                                                        <Button Grid.Column="1" Content="{Binding FavoriteGlyph}" Style="{StaticResource GhostButton}"
-                                                                                FontSize="19" Padding="5" Click="Favorite_Click" ToolTip="Ajouter/retirer des favoris" />
+                                                                        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" VerticalAlignment="Center" />
+                                                                        <Button Grid.Column="1" Content="{Binding FavoriteGlyph}" Style="{StaticResource GhostButton}" FontSize="19" Padding="5" Click="Favorite_Click" ToolTip="Ajouter/retirer des favoris" />
                                                                         <Button Grid.Column="2" Content="•••" Style="{StaticResource GhostButton}" Padding="5" Click="OpenCardMenu_Click">
                                                                             <Button.ContextMenu>
                                                                                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                                                                     <MenuItem Header="Modifier" Click="EditCard_Click" />
                                                                                     <MenuItem Header="Dupliquer" Click="DuplicateCard_Click" />
+                                                                                    <MenuItem Header="Ouvrir un dossier" ItemsSource="{Binding QuickAccessLinks}">
+                                                                                        <MenuItem.Style>
+                                                                                            <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                                                                <Style.Triggers><DataTrigger Binding="{Binding HasQuickAccessLinks}" Value="False"><Setter Property="IsEnabled" Value="False" /></DataTrigger></Style.Triggers>
+                                                                                            </Style>
+                                                                                        </MenuItem.Style>
+                                                                                        <MenuItem.ItemContainerStyle>
+                                                                                            <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                                                                <Setter Property="Header" Value="{Binding Label}" />
+                                                                                                <EventSetter Event="Click" Handler="OpenQuickAccessMenu_Click" />
+                                                                                            </Style>
+                                                                                        </MenuItem.ItemContainerStyle>
+                                                                                    </MenuItem>
                                                                                     <Separator />
                                                                                     <MenuItem Header="Déplacer vers la gauche" Click="MoveCardUp_Click" />
                                                                                     <MenuItem Header="Déplacer vers la droite" Click="MoveCardDown_Click" />
-                                                                                    <Separator />
-                                                                                    <MenuItem Header="Supprimer" Click="DeleteCard_Click" />
+                                                                                    <Separator /><MenuItem Header="Supprimer" Click="DeleteCard_Click" />
                                                                                 </ContextMenu>
                                                                             </Button.ContextMenu>
                                                                         </Button>
                                                                     </Grid>
-
-                                                                    <Grid Grid.Row="1" Margin="0,10,0,8">
-                                                                        <Grid.Style>
-                                                                            <Style TargetType="Grid">
-                                                                                <Setter Property="Visibility" Value="Visible" />
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding DataContext.CompactMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                                                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                                                    </DataTrigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </Grid.Style>
-                                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                                                        <Border x:Name="LogoPanel" Width="50" Height="50" CornerRadius="11" Background="#121A25" Padding="7">
+                                                                    <Grid Grid.Row="1" Margin="0,12,0,10" Style="{StaticResource CardDetailedSection}">
+                                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="90"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                                        <Border Width="78" Height="78" CornerRadius="15" Background="#121A25" Padding="10" HorizontalAlignment="Left">
                                                                             <Image Source="{Binding LogoSource}" Stretch="Uniform" />
                                                                         </Border>
-                                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="9,0,0,0">
-                                                                            <TextBlock Text="{Binding Subtitle}" FontSize="13" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
-                                                                            <TextBlock Text="{Binding CommandLine}" Foreground="#8291A5" FontSize="11" TextTrimming="CharacterEllipsis"
-                                                                                       ToolTip="{Binding CommandLine}" Margin="0,4,0,0" />
+                                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0">
+                                                                            <TextBlock Text="{Binding Subtitle}" FontSize="15" FontWeight="SemiBold" Foreground="#DCE5F0"
+                                                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Subtitle}" />
+                                                                            <TextBlock Text="{Binding TargetPath}" Foreground="#8291A5" FontSize="11" TextTrimming="CharacterEllipsis"
+                                                                                       ToolTip="{Binding CommandLine}" Margin="0,7,0,0" />
                                                                         </StackPanel>
                                                                     </Grid>
-
-                                                                    <ItemsControl Grid.Row="2" ItemsSource="{Binding Tags}" VerticalAlignment="Top">
+                                                                    <ItemsControl Grid.Row="2" ItemsSource="{Binding Tags}" Height="58" VerticalAlignment="Top" ClipToBounds="True">
                                                                         <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                                                         <ItemsControl.ItemTemplate>
                                                                             <DataTemplate>
-                                                                                <Border Background="{Binding Color}" CornerRadius="7" Padding="8,4" Margin="0,0,6,6"
-                                                                                        ToolTip="{Binding Description}">
+                                                                                <Border Background="{Binding Color}" CornerRadius="7" Padding="8,4" Margin="0,0,6,6" ToolTip="{Binding Description}">
                                                                                     <TextBlock Text="{Binding Name}" FontSize="11" FontWeight="SemiBold" />
                                                                                 </Border>
                                                                             </DataTemplate>
                                                                         </ItemsControl.ItemTemplate>
                                                                     </ItemsControl>
-
-                                                                    <TextBlock Grid.Row="3" Text="{Binding ValidationMessage}" FontSize="11" Foreground="#7FB894" Margin="0,5,0,8">
+                                                                    <Border Grid.Row="3" Height="66" Margin="0,4" Padding="0,3" BorderBrush="#304055" BorderThickness="0,1"
+                                                                            Style="{StaticResource CardDetailedSection}">
+                                                                        <Grid>
+                                                                            <ItemsControl ItemsSource="{Binding DisplayedQuickAccessLinks}">
+                                                                                <ItemsControl.ItemTemplate>
+                                                                                    <DataTemplate>
+                                                                                        <Grid Height="29">
+                                                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/><ColumnDefinition Width="34"/></Grid.ColumnDefinitions>
+                                                                                            <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold" Foreground="#8BB9EF"
+                                                                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                                                            <TextBlock Grid.Column="1" Text="{Binding DisplayPath}" FontSize="11" Foreground="{StaticResource MutedBrush}"
+                                                                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding ResolvedPath}" />
+                                                                                            <Button Grid.Column="2" Content="&#xE838;" Style="{StaticResource QuickAccessButton}"
+                                                                                                    Click="OpenQuickAccess_Click" ToolTip="Ouvrir dans l’Explorateur">
+                                                                                                <Button.ContextMenu>
+                                                                                                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                                                                                        <MenuItem Header="Ouvrir dans l’Explorateur" Click="OpenQuickAccessMenu_Click" />
+                                                                                                        <MenuItem Header="Copier le chemin" Click="CopyQuickAccess_Click" />
+                                                                                                    </ContextMenu>
+                                                                                                </Button.ContextMenu>
+                                                                                            </Button>
+                                                                                        </Grid>
+                                                                                    </DataTemplate>
+                                                                                </ItemsControl.ItemTemplate>
+                                                                            </ItemsControl>
+                                                                            <TextBlock Text="Aucun accès rapide configuré" Foreground="#6F8095" FontSize="11" FontStyle="Italic" VerticalAlignment="Center">
+                                                                                <TextBlock.Style>
+                                                                                    <Style TargetType="TextBlock">
+                                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                                        <Style.Triggers><DataTrigger Binding="{Binding HasQuickAccessLinks}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                                                                                    </Style>
+                                                                                </TextBlock.Style>
+                                                                            </TextBlock>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                    <TextBlock Grid.Row="5" Text="{Binding ValidationMessage}" FontSize="11" Margin="0,5,0,8">
                                                                         <TextBlock.Style>
                                                                             <Style TargetType="TextBlock">
                                                                                 <Setter Property="Foreground" Value="#7FB894" />
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding IsValid}" Value="False"><Setter Property="Foreground" Value="#E0A35D" /></DataTrigger>
-                                                                                </Style.Triggers>
+                                                                                <Style.Triggers><DataTrigger Binding="{Binding IsValid}" Value="False"><Setter Property="Foreground" Value="#E0A35D" /></DataTrigger></Style.Triggers>
                                                                             </Style>
                                                                         </TextBlock.Style>
                                                                     </TextBlock>
-                                                                    <Button Grid.Row="4" Content="Lancer" IsEnabled="{Binding IsValid}" Click="LaunchCard_Click" />
+                                                                    <Button Grid.Row="6" Content="Lancer" IsEnabled="{Binding IsValid}" Click="LaunchCard_Click" />
                                                                 </Grid>
                                                             </Grid>
                                                         </Border>
@@ -309,23 +353,16 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
-                    <Border Grid.Row="1" Background="#C9182230" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="14" Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center"
-                            IsHitTestVisible="False">
+                    <Border Grid.Row="1" Background="#C9182230" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="14"
+                            Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                         <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding VisibleCardCount}" Value="0">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
+                            <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers><DataTrigger Binding="{Binding VisibleCardCount}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
                             </Style>
                         </Border.Style>
                         <StackPanel HorizontalAlignment="Center">
                             <TextBlock Text="Aucune carte ne correspond" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                            <TextBlock Text="Modifiez la recherche ou réinitialisez les filtres."
-                                       Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0" />
+                            <TextBlock Text="Modifiez la recherche ou réinitialisez les filtres." Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0" />
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -335,15 +372,13 @@
                 <Grid>
                     <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button x:Name="CatalogStatusButton" Style="{StaticResource GhostButton}" Padding="8,3"
-                                Click="OpenCatalogMenu_Click" ToolTip="Gérer le catalogue">
+                        <Button x:Name="CatalogStatusButton" Style="{StaticResource GhostButton}" Padding="8,3" Click="OpenCatalogMenu_Click" ToolTip="Gérer le catalogue">
                             <Button.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Changer de catalogue…" Click="ChooseCatalog_Click" />
                                     <MenuItem Header="Recharger maintenant" Click="ReloadCatalog_Click" />
                                     <MenuItem Header="Ouvrir le dossier" Click="OpenCatalogFolder_Click" />
-                                    <Separator />
-                                    <MenuItem Header="Revenir au catalogue local" Click="UseLocalCatalog_Click" />
+                                    <Separator /><MenuItem Header="Revenir au catalogue local" Click="UseLocalCatalog_Click" />
                                 </ContextMenu>
                             </Button.ContextMenu>
                             <StackPanel Orientation="Horizontal">

@@ -9,7 +9,7 @@ public partial class TagEditorWindow : Window
 {
     public LauncherTag Result { get; }
 
-    public TagEditorWindow(LauncherTag tag, bool isNew)
+    public TagEditorWindow(LauncherTag tag, bool isNew, IEnumerable<string>? existingCategories = null)
     {
         InitializeComponent();
         WindowThemeService.ApplyDarkTitleBar(this);
@@ -23,7 +23,15 @@ public partial class TagEditorWindow : Window
             SortOrder = tag.SortOrder
         };
         NameTextBox.Text = tag.Name;
-        CategoryTextBox.Text = tag.Category;
+        var categories = (existingCategories ?? [])
+            .Append(tag.Category)
+            .Where(category => !string.IsNullOrWhiteSpace(category))
+            .Select(category => category.Trim())
+            .Distinct(StringComparer.CurrentCultureIgnoreCase)
+            .OrderBy(category => category, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
+        CategoryComboBox.ItemsSource = categories;
+        CategoryComboBox.Text = tag.Category;
         DescriptionTextBox.Text = tag.Description;
         Title = isNew ? "Nouveau tag" : "Modifier le tag";
         HeadingText.Text = Title;
@@ -46,7 +54,7 @@ public partial class TagEditorWindow : Window
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         var name = NameTextBox.Text.Trim();
-        var category = CategoryTextBox.Text.Trim();
+        var category = CategoryComboBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(category))
         {
             FormMessageText.Text = "Le nom et la catégorie sont obligatoires.";

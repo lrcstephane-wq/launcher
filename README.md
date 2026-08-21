@@ -4,13 +4,13 @@ Application Windows destinée à centraliser les raccourcis de travail Idéo : T
 
 ## Fonctions principales
 
-- cartes personnalisables : titre, description, cible, arguments, dossier de travail, logo, couleur et tags ;
+- cartes personnalisables : titre, description, cible, arguments, dossier de travail, logo, couleur, tags et accès dossiers ;
 - lancement normal ou administrateur, avec réduction facultative du launcher ;
 - import d'un raccourci Windows `.lnk` par sélection ou glisser-déposer ;
 - groupes personnalisés et réorganisation des cartes par glisser-déposer ;
-- favoris et classement des éléments récemment lancés ;
+- favoris, filtre dédié et classement des éléments récemment lancés ;
 - recherche plein texte et filtres multi-sélection ;
-- vues de filtres enregistrées ;
+- vues de filtres enregistrées, groupes et panneau latéral repliables ;
 - gestion centralisée des tags et de leurs catégories ;
 - catalogue local ou partagé sur un dossier synchronisé/réseau ;
 - chemin du catalogue visible et rechargement automatique des modifications partagées ;
@@ -34,7 +34,7 @@ Exemple : `Version = 6.22 OU 6.27` avec `Usage = Travail` affiche les cartes de 
 - sauvegardes : dossier `Backups` situé à côté du catalogue ;
 - journal : `%LOCALAPPDATA%\Ideo\TopSolidLauncher\launcher.log`.
 
-Les favoris, récents, dimensions de fenêtre et vues enregistrées restent propres au poste. Le catalogue (cartes, groupes et tags) peut être partagé.
+Les favoris, récents, dimensions de fenêtre, vues enregistrées et états repliés restent propres au poste. Le catalogue (cartes, accès rapides, groupes et tags) peut être partagé.
 
 ## Télécharger l'exécutable
 

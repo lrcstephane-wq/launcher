@@ -20,7 +20,10 @@ public partial class TagManagerWindow : Window
 
     private void Add_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new TagEditorWindow(new LauncherTag { Color = "#2E69B3", SortOrder = _catalog.Tags.Count }, true) { Owner = this };
+        var dialog = new TagEditorWindow(
+            new LauncherTag { Color = "#2E69B3", SortOrder = _catalog.Tags.Count },
+            true,
+            ExistingCategories()) { Owner = this };
         if (dialog.ShowDialog() != true) return;
         if (IsDuplicate(dialog.Result))
         {
@@ -36,7 +39,7 @@ public partial class TagManagerWindow : Window
     private void Edit_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.DataContext is not LauncherTag tag) return;
-        var dialog = new TagEditorWindow(tag, false) { Owner = this };
+        var dialog = new TagEditorWindow(tag, false, ExistingCategories()) { Owner = this };
         if (dialog.ShowDialog() != true) return;
         if (IsDuplicate(dialog.Result, tag.Id))
         {
@@ -72,6 +75,12 @@ public partial class TagManagerWindow : Window
 
     private void RefreshList() => TagsList.ItemsSource = _catalog.Tags
         .OrderBy(tag => tag.Category).ThenBy(tag => tag.SortOrder).ThenBy(tag => tag.Name).ToArray();
+
+    private IEnumerable<string> ExistingCategories() => _catalog.Tags
+        .Select(tag => tag.Category)
+        .Where(category => !string.IsNullOrWhiteSpace(category))
+        .Distinct(StringComparer.CurrentCultureIgnoreCase)
+        .OrderBy(category => category, StringComparer.CurrentCultureIgnoreCase);
 
     private bool IsDuplicate(LauncherTag candidate, Guid? excludedId = null) => _catalog.Tags.Any(tag =>
         tag.Id != excludedId &&

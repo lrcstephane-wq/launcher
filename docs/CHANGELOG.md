@@ -1,5 +1,20 @@
 # Historique des versions
 
+## 0.3.2
+
+- cartes redimensionnées et réorganisées, avec bandeau d'accent et logo plus visibles ;
+- accès rapides personnalisables par carte, ouvrables dans l'Explorateur après validation du dossier ;
+- prise en charge des chemins réseau, relatifs au catalogue et des variables d'environnement Windows ;
+- ajout des dossiers par sélection ou glisser-déposer dans l'éditeur de carte ;
+- filtres latéraux et groupes repliables avec mémorisation de leur état ;
+- filtre « Favoris uniquement » et recherche étendue aux accès rapides ;
+- correction de l'affichage immédiat des vues enregistrées ;
+- fenêtres de saisie redimensionnées automatiquement ;
+- catégories de tags sélectionnables dans une liste modifiable ;
+- date française dynamique et accès direct aux téléchargements TopSolid ;
+- ascenseurs, menus contextuels, gouttières et séparateurs harmonisés avec le thème sombre ;
+- format du catalogue migré automatiquement en version 2, sans perte des cartes existantes.
+
 ## 0.3.1
 
 - thème sombre imposé sur toutes les fenêtres et sur la barre de titre Windows compatible ;

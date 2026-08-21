@@ -19,6 +19,10 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 - vérifier une carte avec cible absente : message visible et lancement désactivé ;
 - lancer normalement puis en administrateur ;
 - vérifier le comportement avec et sans réduction automatique.
+- ajouter des accès rapides par sélection et par glisser-déposer ;
+- ouvrir un dossier local et un partage réseau valide sans message de succès ;
+- vérifier l'alerte sur un dossier absent et la copie du chemin ;
+- vérifier un chemin avec variable d'environnement et un chemin relatif au catalogue.
 
 ## Organisation et filtres
 
@@ -29,7 +33,19 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 - sélectionner une seconde catégorie et confirmer le `ET` ;
 - combiner recherche texte et filtres ;
 - enregistrer, rappeler puis supprimer une vue ;
+- vérifier que la vue apparaît immédiatement après validation ;
+- combiner « Favoris uniquement » avec des tags puis enregistrer la vue ;
+- masquer puis réafficher les filtres et contrôler la persistance au redémarrage ;
+- replier un groupe et contrôler la persistance au redémarrage ;
 - vérifier les modes détaillé et compact.
+
+## Interface
+
+- vérifier la date française dynamique dans l'en-tête ;
+- vérifier les fenêtres Nouveau groupe et Enregistrer la vue avec un libellé court puis long ;
+- vérifier les ascenseurs de toutes les fenêtres et les menus `•••`/clic droit en thème sombre ;
+- ouvrir la page de téléchargements TopSolid depuis le panneau gauche et depuis le menu principal ;
+- créer un tag en choisissant une catégorie existante, puis en saisissant une nouvelle catégorie.
 
 ## Données et partage
 
