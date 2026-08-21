@@ -198,6 +198,15 @@ public sealed class CatalogService
             card.WorkingDirectory = card.WorkingDirectory?.Trim() ?? string.Empty;
             card.LogoPath = card.LogoPath?.Trim() ?? string.Empty;
             card.AccentColor = NormalizeColor(card.AccentColor, "#2E69B3");
+            card.QuickAccessLinks ??= [];
+            card.QuickAccessLinks = card.QuickAccessLinks
+                .Where(link => !string.IsNullOrWhiteSpace(link.Label) || !string.IsNullOrWhiteSpace(link.Path))
+                .Select(link => new LauncherQuickAccess
+                {
+                    Label = string.IsNullOrWhiteSpace(link.Label) ? "Dossier" : link.Label.Trim(),
+                    Path = link.Path?.Trim().Trim('"') ?? string.Empty
+                })
+                .ToList();
             card.GroupId = catalog.Groups.Any(group => group.Id == card.GroupId) ? card.GroupId : defaultGroup;
             card.TagIds ??= [];
             card.TagIds = card.TagIds.Distinct().Where(id => catalog.Tags.Any(tag => tag.Id == id)).ToList();

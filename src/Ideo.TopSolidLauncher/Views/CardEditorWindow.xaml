@@ -17,7 +17,7 @@
             <Grid>
                 <StackPanel>
                     <TextBlock x:Name="HeadingText" Text="Nouveau raccourci" Style="{StaticResource DialogHeading}" />
-                    <TextBlock Text="Créez une carte ou importez un raccourci Windows existant."
+                    <TextBlock Text="Créez une carte, importez un .lnk ou déposez un dossier pour l’ajouter aux accès rapides."
                                Margin="0,5,0,0" Foreground="{StaticResource MutedBrush}" />
                 </StackPanel>
                 <Button Content="Importer un .lnk" HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -81,6 +81,42 @@
                                 </Grid>
                             </StackPanel>
                         </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionCard}" Margin="0,16,0,0">
+                    <StackPanel>
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="Accès rapides" FontSize="17" FontWeight="SemiBold" />
+                                <TextBlock Text="Ajoutez les dossiers utiles à cette carte : Cfg, Grp, documents, modèles…"
+                                           Foreground="{StaticResource MutedBrush}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <Button Content="+  Ajouter un dossier" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Style="{StaticResource SecondaryButton}" Click="AddQuickAccess_Click" />
+                        </Grid>
+                        <ItemsControl x:Name="QuickAccessItemsControl" Margin="0,14,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="130"/><ColumnDefinition Width="10"/>
+                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" MaxLength="24"
+                                                 ToolTip="Nom affiché sur la carte, par exemple Cfg ou Grp" />
+                                        <TextBox Grid.Column="2" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}"
+                                                 ToolTip="Les variables Windows comme %USERNAME% sont acceptées" />
+                                        <Button Grid.Column="3" Content="Parcourir" Style="{StaticResource SecondaryButton}"
+                                                Margin="8,0,0,0" Click="BrowseQuickAccess_Click" />
+                                        <Button Grid.Column="4" Content="×" Style="{StaticResource GhostButton}" FontSize="20"
+                                                Width="40" Margin="4,0,0,0" Click="RemoveQuickAccess_Click" ToolTip="Retirer cet accès" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="NoQuickAccessText" Text="Aucun dossier ajouté."
+                                   Foreground="#78899E" FontStyle="Italic" Margin="0,12,0,0" />
                     </StackPanel>
                 </Border>
 

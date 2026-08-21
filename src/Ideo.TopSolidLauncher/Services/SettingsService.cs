@@ -13,6 +13,7 @@ public sealed class SettingsService
             settings.WindowHeight = double.IsFinite(settings.WindowHeight) ? Math.Clamp(settings.WindowHeight, 650, 2160) : 820;
             settings.FavoriteCardIds = settings.FavoriteCardIds?.Distinct().ToList() ?? [];
             settings.RecentCardIds = settings.RecentCardIds?.Distinct().Take(20).ToList() ?? [];
+            settings.CollapsedGroupIds = settings.CollapsedGroupIds?.Distinct().ToList() ?? [];
             settings.SavedViews ??= [];
             foreach (var view in settings.SavedViews)
                 view.SelectedTagIds = view.SelectedTagIds?.Distinct().ToList() ?? [];

@@ -10,6 +10,8 @@ public sealed class CardViewModel : ObservableObject
 
     public LauncherCard Model { get; }
     public IReadOnlyList<LauncherTag> Tags { get; }
+    public IReadOnlyList<QuickAccessViewModel> QuickAccessLinks { get; }
+    public IReadOnlyList<QuickAccessViewModel> DisplayedQuickAccessLinks { get; }
     public string Title => Model.Title;
     public string Subtitle => Model.Subtitle;
     public string TargetPath => Model.TargetPath;
@@ -24,6 +26,7 @@ public sealed class CardViewModel : ObservableObject
     public bool IsValid => Validation.IsValid;
     public string ValidationMessage => Validation.IsValid ? "Prêt à lancer" : Validation.Message;
     public string FavoriteGlyph => IsFavorite ? "★" : "☆";
+    public bool HasQuickAccessLinks => QuickAccessLinks.Count > 0;
 
     public bool IsFavorite
     {
@@ -39,6 +42,11 @@ public sealed class CardViewModel : ObservableObject
     {
         Model = model;
         Tags = tags;
+        QuickAccessLinks = model.QuickAccessLinks
+            .Where(link => !string.IsNullOrWhiteSpace(link.Path))
+            .Select(link => new QuickAccessViewModel(link, catalogFolder))
+            .ToArray();
+        DisplayedQuickAccessLinks = QuickAccessLinks.Take(2).ToArray();
         _isFavorite = isFavorite;
         _catalogFolder = catalogFolder;
     }

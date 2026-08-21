@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -12,6 +13,7 @@ public partial class CardEditorWindow : Window
 {
     private readonly LauncherCatalog _catalog;
     private readonly List<TagChoice> _tagChoices;
+    private readonly ObservableCollection<LauncherQuickAccess> _quickAccessLinks;
     public LauncherCard Result { get; }
 
     public CardEditorWindow(LauncherCatalog catalog, LauncherCard card, bool isNew)
@@ -61,6 +63,9 @@ public partial class CardEditorWindow : Window
             .Select(tag => new TagChoice(tag, Result.TagIds.Contains(tag.Id)))
             .ToList();
         TagsItemsControl.ItemsSource = _tagChoices;
+        _quickAccessLinks = new ObservableCollection<LauncherQuickAccess>(Result.QuickAccessLinks.Select(link => link.Clone()));
+        QuickAccessItemsControl.ItemsSource = _quickAccessLinks;
+        UpdateQuickAccessEmptyState();
         UpdateColorPreview();
     }
 
@@ -132,6 +137,33 @@ public partial class CardEditorWindow : Window
             LogoTextBox.Text = dialog.FileName;
     }
 
+    private void AddQuickAccess_Click(object sender, RoutedEventArgs e)
+    {
+        _quickAccessLinks.Add(new LauncherQuickAccess());
+        UpdateQuickAccessEmptyState();
+    }
+
+    private void RemoveQuickAccess_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is LauncherQuickAccess access)
+            _quickAccessLinks.Remove(access);
+        UpdateQuickAccessEmptyState();
+    }
+
+    private void BrowseQuickAccess_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not LauncherQuickAccess access) return;
+        var initialPath = Environment.ExpandEnvironmentVariables(access.Path.Trim().Trim('"'));
+        var dialog = new OpenFolderDialog
+        {
+            Title = $"Choisir le dossier « {access.Label} »",
+            InitialDirectory = Directory.Exists(initialPath) ? initialPath : null
+        };
+        if (dialog.ShowDialog(this) == true)
+            access.Path = dialog.FolderName;
+        QuickAccessItemsControl.Items.Refresh();
+    }
+
     private void ImportShortcut_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog
@@ -146,15 +178,24 @@ public partial class CardEditorWindow : Window
 
     private void Window_DragOver(object sender, DragEventArgs e)
     {
-        e.Effects = GetShortcutPath(e.Data) is null ? DragDropEffects.None : DragDropEffects.Copy;
+        e.Effects = GetDroppedPath(e.Data) is null ? DragDropEffects.None : DragDropEffects.Copy;
         e.Handled = true;
     }
 
     private void Window_Drop(object sender, DragEventArgs e)
     {
-        var path = GetShortcutPath(e.Data);
-        if (path is not null)
+        var path = GetDroppedPath(e.Data);
+        if (path?.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) == true)
             ImportShortcut(path);
+        else if (path is not null && Directory.Exists(path))
+        {
+            _quickAccessLinks.Add(new LauncherQuickAccess
+            {
+                Label = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
+                Path = path
+            });
+            UpdateQuickAccessEmptyState();
+        }
     }
 
     private void ImportShortcut(string path)
@@ -206,6 +247,9 @@ public partial class CardEditorWindow : Window
         Result.WorkingDirectory = WorkingDirectoryTextBox.Text.Trim().Trim('"');
         Result.LogoPath = LogoTextBox.Text.Trim().Trim('"');
         Result.AccentColor = NormalizeColor(ColorTextBox.Text);
+        Result.QuickAccessLinks = _quickAccessLinks
+            .Select(link => new LauncherQuickAccess { Label = link.Label.Trim(), Path = link.Path.Trim().Trim('"') })
+            .ToList();
         Result.TagIds = _tagChoices.Where(choice => choice.IsSelected).Select(choice => choice.Tag.Id).ToList();
         Result.RunAsAdministrator = RunAsAdminCheckBox.IsChecked == true;
         Result.MinimizeAfterLaunch = MinimizeCheckBox.IsChecked == true;
@@ -220,11 +264,14 @@ public partial class CardEditorWindow : Window
         return "#2E69B3";
     }
 
-    private static string? GetShortcutPath(IDataObject data)
+    private void UpdateQuickAccessEmptyState() =>
+        NoQuickAccessText.Visibility = _quickAccessLinks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    private static string? GetDroppedPath(IDataObject data)
     {
         if (!data.GetDataPresent(DataFormats.FileDrop) || data.GetData(DataFormats.FileDrop) is not string[] { Length: > 0 } files)
             return null;
-        return files[0].EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) ? files[0] : null;
+        return files[0].EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) || Directory.Exists(files[0]) ? files[0] : null;
     }
 
     public sealed class TagChoice : INotifyPropertyChanged

@@ -1,16 +1,17 @@
 <Window x:Class="Ideo.TopSolidLauncher.Views.PromptWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Saisie" Width="520" Height="255" ResizeMode="NoResize"
+        Title="Saisie" Width="520" SizeToContent="Height" MaxHeight="420" ResizeMode="NoResize"
         Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextBrush}"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <Grid Background="{StaticResource BackgroundBrush}">
-        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <Border Style="{StaticResource SectionCard}" Margin="24,22">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Border Style="{StaticResource SectionCard}" Margin="24,22,24,20">
             <StackPanel>
-                <TextBlock x:Name="PromptText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock x:Name="PromptText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="430" />
                 <TextBox x:Name="ValueTextBox" Margin="0,14,0,0" />
-                <TextBlock x:Name="FormMessageText" Foreground="{StaticResource WarningBrush}" Margin="0,8,0,0" />
+                <TextBlock x:Name="FormMessageText" Foreground="{StaticResource WarningBrush}" Margin="0,8,0,0"
+                           TextWrapping="Wrap" />
             </StackPanel>
         </Border>
         <Border Grid.Row="1" Background="{StaticResource FooterBrush}" BorderBrush="{StaticResource BorderBrush}"

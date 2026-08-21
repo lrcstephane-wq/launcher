@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,6 +17,7 @@ namespace Ideo.TopSolidLauncher;
 
 public partial class MainWindow : Window
 {
+    private const string TopSolidDownloadsUrl = "https://faq.topsolid.com/content/1/61/fr/ou-puis_je-trouver-les-installations-de-topsolid-version-actuelles-et-anciennes-versions-.html";
     private readonly SettingsService _settingsService = new();
     private readonly UserSettings _settings;
     private readonly CatalogService _catalogService;
@@ -70,6 +72,8 @@ public partial class MainWindow : Window
             WindowState = WindowState.Maximized;
         VersionText.Text = $"Version {UpdateService.CurrentVersion.ToString(3)}";
         UpdateCatalogLocation();
+        ApplyFilterPaneState();
+        UpdateCurrentDate();
         _catalogMonitorTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         _catalogMonitorTimer.Tick += CatalogMonitorTimer_Tick;
         Activated += MainWindow_Activated;
@@ -201,6 +205,58 @@ public partial class MainWindow : Window
             _viewModel.ToggleFavorite(card);
     }
 
+    private void OpenQuickAccess_Click(object sender, RoutedEventArgs e)
+    {
+        if (Context<QuickAccessViewModel>(sender) is { } access)
+            OpenQuickAccess(access);
+    }
+
+    private void OpenQuickAccessMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (Context<QuickAccessViewModel>(sender) is { } access)
+            OpenQuickAccess(access);
+    }
+
+    private void CopyQuickAccess_Click(object sender, RoutedEventArgs e)
+    {
+        if (Context<QuickAccessViewModel>(sender) is not { } access)
+            return;
+        try
+        {
+            Clipboard.SetText(access.ResolvedPath);
+            _viewModel.StatusMessage = $"Chemin « {access.Label} » copié";
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(exception.Message, "Copie impossible", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void OpenQuickAccess(QuickAccessViewModel access)
+    {
+        try
+        {
+            var path = access.ResolvedPath;
+            if (!Directory.Exists(path))
+            {
+                MessageBox.Show(
+                    $"Le dossier « {access.Label} » est introuvable ou inaccessible.\n\n{path}",
+                    "Dossier inaccessible", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"\"{path}\"",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(exception.Message, "Dossier inaccessible", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
     #endregion
 
     #region Tags, détection et groupes
@@ -328,6 +384,17 @@ public partial class MainWindow : Window
         SaveCatalog("L'ordre des groupes a été modifié");
     }
 
+    private void ToggleGroupCollapse_Click(object sender, RoutedEventArgs e)
+    {
+        if (Context<GroupViewModel>(sender) is not { } group)
+            return;
+        group.IsCollapsed = !group.IsCollapsed;
+        _settings.CollapsedGroupIds.Remove(group.Model.Id);
+        if (group.IsCollapsed)
+            _settings.CollapsedGroupIds.Add(group.Model.Id);
+        _settingsService.Save(_settings);
+    }
+
     #endregion
 
     #region Ordre des cartes et vues
@@ -391,6 +458,23 @@ public partial class MainWindow : Window
 
     private void ToggleCompact_Click(object sender, RoutedEventArgs e) =>
         _viewModel.CompactMode = !_viewModel.CompactMode;
+
+    private void ToggleFilterPane_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.IsFilterPaneCollapsed = !_settings.IsFilterPaneCollapsed;
+        ApplyFilterPaneState();
+        _settingsService.Save(_settings);
+    }
+
+    private void ApplyFilterPaneState()
+    {
+        var collapsed = _settings.IsFilterPaneCollapsed;
+        FilterColumn.Width = new GridLength(collapsed ? 46 : 272);
+        FilterContent.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        FilterPaneToggleButton.Content = collapsed ? "›" : "‹";
+        FilterPaneToggleButton.ToolTip = collapsed ? "Afficher les filtres" : "Masquer les filtres";
+        FilterPaneToggleButton.Margin = collapsed ? new Thickness(0, 18, 8, 0) : new Thickness(0, 18, 8, 0);
+    }
 
     private void OpenCardMenu_Click(object sender, RoutedEventArgs e) => OpenButtonMenu(sender);
     private void OpenGroupMenu_Click(object sender, RoutedEventArgs e) => OpenButtonMenu(sender);
@@ -558,6 +642,18 @@ public partial class MainWindow : Window
     {
         try { LogService.OpenLogFolder(); }
         catch (Exception exception) { MessageBox.Show(exception.Message, "Journal inaccessible", MessageBoxButton.OK, MessageBoxImage.Warning); }
+    }
+
+    private void OpenTopSolidDownloads_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = TopSolidDownloadsUrl, UseShellExecute = true });
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(exception.Message, "Page inaccessible", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     #endregion
@@ -764,6 +860,7 @@ public partial class MainWindow : Window
 
     private void CatalogMonitorTimer_Tick(object? sender, EventArgs e)
     {
+        UpdateCurrentDate();
         if (_unavailableSharedCatalogPath is not null || !_catalogService.HasChangedExternally())
             return;
         if (!IsEnabled)
@@ -790,6 +887,13 @@ public partial class MainWindow : Window
         {
             return string.Equals(first, second, StringComparison.OrdinalIgnoreCase);
         }
+    }
+
+    private void UpdateCurrentDate()
+    {
+        var culture = CultureInfo.GetCultureInfo("fr-FR");
+        var value = DateTime.Now.ToString("dddd d MMMM yyyy", culture);
+        CurrentDateText.Text = culture.TextInfo.ToTitleCase(value);
     }
 
     private void PrepareCard(LauncherCard card) => card.LogoPath = _catalogService.ImportCardLogo(card);

@@ -2,7 +2,7 @@ namespace Ideo.TopSolidLauncher.Models;
 
 public sealed class LauncherCatalog
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;

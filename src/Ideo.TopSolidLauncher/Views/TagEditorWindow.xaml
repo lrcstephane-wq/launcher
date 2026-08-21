@@ -23,8 +23,9 @@
                     <TextBox x:Name="NameTextBox" MaxLength="40" />
 
                     <TextBlock Text="Catégorie *" Style="{StaticResource FieldLabel}" Margin="0,14,0,6" />
-                    <TextBox x:Name="CategoryTextBox" MaxLength="40"
-                             ToolTip="Exemples : Usage, Version, Chants, Année, Client" />
+                    <ComboBox x:Name="CategoryComboBox" IsEditable="True" IsTextSearchEnabled="True"
+                              MaxDropDownHeight="240"
+                              ToolTip="Choisissez une catégorie existante ou saisissez un nouveau nom" />
 
                     <TextBlock Text="Description facultative" Style="{StaticResource FieldLabel}" Margin="0,14,0,6" />
                     <TextBox x:Name="DescriptionTextBox" MaxLength="120" />

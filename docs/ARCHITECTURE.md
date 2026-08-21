@@ -25,7 +25,9 @@ Le domaine fonctionnel est volontairement générique : une carte représente un
 - `Cards` : commandes, apparence, comportement et relations vers groupe/tags ;
 - `SchemaVersion` : version du format pour les futures migrations.
 
-Une carte contient notamment `TargetPath`, `Arguments`, `WorkingDirectory`, `RunAsAdministrator` et `MinimizeAfterLaunch`. Aucun script avant/après lancement ni suivi d'instances n'est exécuté.
+Une carte contient notamment `TargetPath`, `Arguments`, `WorkingDirectory`, `RunAsAdministrator`, `MinimizeAfterLaunch` et une liste de `QuickAccessLinks`. Chaque accès rapide ne stocke qu'un libellé et un chemin : la résolution et la validation restent dans le ViewModel au moment de l'affichage ou de l'ouverture. Aucun script avant/après lancement ni suivi d'instances n'est exécuté.
+
+Le schéma 2 ajoute `QuickAccessLinks`. `CatalogService.Normalize` initialise cette liste lors de l'ouverture d'un ancien catalogue ; la migration est donc ascendante et ne modifie pas les cartes existantes.
 
 ## Filtres
 
@@ -37,7 +39,7 @@ ET
 (tag C OU tag D de la catégorie 2)
 ```
 
-La recherche texte s'ajoute avec `ET` et inspecte titre, description, cible, arguments et noms de tags.
+La recherche texte s'ajoute avec `ET` et inspecte titre, description, cible, arguments, noms de tags et accès rapides.
 
 ## Persistance et sûreté
 
@@ -51,6 +53,8 @@ La recherche texte s'ajoute avec `ET` et inspecte titre, description, cible, arg
 - les erreurs non gérées sont journalisées ;
 - les cibles sont validées avant enregistrement et avant lancement ;
 - les réglages personnels sont séparés du catalogue partageable.
+
+Les favoris, vues enregistrées, groupes repliés et état du panneau de filtres sont des réglages locaux. Les accès rapides appartiennent aux cartes et sont donc partagés avec le catalogue.
 
 Le fichier JSON est lisible manuellement, mais les modifications doivent normalement passer par l'application pour bénéficier de la validation et des sauvegardes.
 
