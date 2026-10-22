@@ -1,5 +1,7 @@
 using System.Text.Json;
+using Ideo.TopSolidLauncher.Models;
 using Ideo.TopSolidLauncher.Services;
+using Ideo.TopSolidLauncher.ViewModels;
 
 var root = Path.Combine(Path.GetTempPath(), $"ideo-launcher-migration-{Guid.NewGuid():N}");
 Directory.CreateDirectory(root);
@@ -59,7 +61,43 @@ try
     using var json = JsonDocument.Parse(File.ReadAllText(catalogPath));
     Assert(json.RootElement.GetProperty("SchemaVersion").GetInt32() == 4, "Le catalogue enregistré n'utilise pas le schéma 4.");
     Assert(json.RootElement.GetProperty("Cards")[0].GetProperty("LaunchProfiles").GetArrayLength() == 1, "Le mode migré n'est pas présent dans le JSON.");
+
+    var version622 = new LauncherTag { Name = "6.22", Category = "Version", CategorySortOrder = 1, SortOrder = 0 };
+    var version627 = new LauncherTag { Name = "6.27", Category = "Version", CategorySortOrder = 1, SortOrder = 1 };
+    var application = new LauncherTag { Name = "TopSolid'Wood", Category = "Application", CategorySortOrder = 2, SortOrder = 0 };
+    catalog.Tags.AddRange([version622, version627, application]);
+    var secondCard = card.Clone();
+    secondCard.Id = Guid.NewGuid();
+    secondCard.Title = "Deuxième carte";
+    secondCard.SortOrder = 8;
+    var thirdCard = card.Clone();
+    thirdCard.Id = Guid.NewGuid();
+    thirdCard.Title = "Troisième carte";
+    thirdCard.SortOrder = 9;
+    catalog.Cards.AddRange([secondCard, thirdCard]);
+    var viewModel = new MainViewModel(catalog, new UserSettings(), service, new SettingsService());
+    var usageCategory = viewModel.FilterCategories.First(item => item.Name == "Usage");
+    var applicationCategory = viewModel.FilterCategories.First(item => item.Name == "Application");
+    Assert(viewModel.ReorderCategory(usageCategory, applicationCategory, insertAfter: true), "La catégorie n'a pas été déplacée.");
+    Assert(viewModel.FilterCategories.Last().Name == "Usage", "La catégorie n'est pas visible à son nouvel emplacement.");
+    Assert(catalog.Tags.First(item => item.Category == "Usage").CategorySortOrder == 2, "L'ordre partagé de la catégorie n'a pas été enregistré.");
+
+    var versionCategory = viewModel.FilterCategories.First(item => item.Name == "Version");
+    var option622 = versionCategory.Options.First(item => item.Tag.Id == version622.Id);
+    var option627 = versionCategory.Options.First(item => item.Tag.Id == version627.Id);
+    Assert(viewModel.ReorderTag(option622, option627, insertAfter: true), "Le tag n'a pas été déplacé.");
+    Assert(versionCategory.Options.Last().Tag.Id == version622.Id && version622.SortOrder == 1,
+        "L'ordre visuel ou partagé du tag est incorrect.");
+
+    var cardsGroup = viewModel.VisibleGroups.Single();
+    var originalCard = cardsGroup.Cards.First(item => item.Model.Id == card.Id);
+    var lastCard = cardsGroup.Cards.First(item => item.Model.Id == thirdCard.Id);
+    Assert(viewModel.ReorderCard(originalCard, cardsGroup, lastCard, insertAfter: true), "La carte n'a pas été déplacée.");
+    Assert(cardsGroup.Cards.Last().Model.Id == card.Id, "La carte n'est pas visible à son nouvel emplacement.");
+    Assert(card.SortOrder == 2 && thirdCard.SortOrder == 1, "L'ordre partagé des cartes est incorrect.");
     Console.WriteLine("Migration v0.3.2 -> v0.4.0 : OK");
+    Console.WriteLine("Réorganisation interactive des catégories et tags : OK");
+    Console.WriteLine("Réorganisation interactive des cartes : OK");
 }
 finally
 {

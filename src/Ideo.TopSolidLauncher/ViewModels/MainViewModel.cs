@@ -270,26 +270,83 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    public void ReorderCategory(FilterCategoryViewModel source, FilterCategoryViewModel target)
+    public bool ReorderCategory(FilterCategoryViewModel source, FilterCategoryViewModel target, bool insertAfter)
     {
-        if (source.Name.Equals(target.Name, StringComparison.CurrentCultureIgnoreCase)) return;
-        var categories = FilterCategories.Select(category => category.Name).ToList();
-        categories.Remove(source.Name);
-        categories.Insert(categories.IndexOf(target.Name), source.Name);
-        for (var index = 0; index < categories.Count; index++)
-            foreach (var tag in Catalog.Tags.Where(tag => tag.Category.Equals(categories[index], StringComparison.CurrentCultureIgnoreCase)))
+        if (source.Name.Equals(target.Name, StringComparison.CurrentCultureIgnoreCase)) return false;
+        var sourceIndex = FilterCategories.IndexOf(source);
+        var targetIndex = FilterCategories.IndexOf(target);
+        if (sourceIndex < 0 || targetIndex < 0) return false;
+        var destinationIndex = targetIndex + (insertAfter ? 1 : 0);
+        if (sourceIndex < destinationIndex) destinationIndex--;
+        destinationIndex = Math.Clamp(destinationIndex, 0, FilterCategories.Count - 1);
+        if (sourceIndex == destinationIndex) return false;
+        FilterCategories.Move(sourceIndex, destinationIndex);
+        for (var index = 0; index < FilterCategories.Count; index++)
+            foreach (var tag in Catalog.Tags.Where(tag => tag.Category.Equals(FilterCategories[index].Name, StringComparison.CurrentCultureIgnoreCase)))
                 tag.CategorySortOrder = index;
+        return true;
     }
 
-    public bool ReorderTag(FilterOptionViewModel source, FilterOptionViewModel target)
+    public bool ReorderTag(FilterOptionViewModel source, FilterOptionViewModel target, bool insertAfter)
     {
         if (!source.Tag.Category.Equals(target.Tag.Category, StringComparison.CurrentCultureIgnoreCase) || source.Tag.Id == target.Tag.Id)
             return false;
-        var tags = Catalog.Tags.Where(tag => tag.Category.Equals(source.Tag.Category, StringComparison.CurrentCultureIgnoreCase))
-            .OrderBy(tag => tag.SortOrder).ThenBy(tag => tag.Name).ToList();
-        tags.Remove(source.Tag);
-        tags.Insert(tags.IndexOf(target.Tag), source.Tag);
-        for (var index = 0; index < tags.Count; index++) tags[index].SortOrder = index;
+        var category = FilterCategories.FirstOrDefault(item => item.Name.Equals(source.Tag.Category, StringComparison.CurrentCultureIgnoreCase));
+        if (category is null) return false;
+        var sourceIndex = category.Options.IndexOf(source);
+        var targetIndex = category.Options.IndexOf(target);
+        if (sourceIndex < 0 || targetIndex < 0) return false;
+        var destinationIndex = targetIndex + (insertAfter ? 1 : 0);
+        if (sourceIndex < destinationIndex) destinationIndex--;
+        destinationIndex = Math.Clamp(destinationIndex, 0, category.Options.Count - 1);
+        if (sourceIndex == destinationIndex) return false;
+        category.Options.Move(sourceIndex, destinationIndex);
+        for (var index = 0; index < category.Options.Count; index++)
+            category.Options[index].Tag.SortOrder = index;
+        return true;
+    }
+
+    public bool ReorderCard(CardViewModel source, GroupViewModel destinationGroup, CardViewModel? target, bool insertAfter)
+    {
+        if (target?.Model.Id == source.Model.Id) return false;
+
+        var sourceGroupId = source.Model.GroupId;
+        var sourceGroup = VisibleGroups.FirstOrDefault(group => group.Cards.Any(card => card.Model.Id == source.Model.Id));
+        var sourceViewModel = sourceGroup?.Cards.FirstOrDefault(card => card.Model.Id == source.Model.Id) ?? source;
+        var currentCards = Catalog.Cards.Where(card => card.GroupId == sourceGroupId)
+            .OrderBy(card => card.SortOrder).ThenBy(card => card.Title).ToList();
+        var currentIndex = currentCards.FindIndex(card => card.Id == source.Model.Id);
+
+        var destinationCards = Catalog.Cards
+            .Where(card => card.GroupId == destinationGroup.Model.Id && card.Id != source.Model.Id)
+            .OrderBy(card => card.SortOrder).ThenBy(card => card.Title).ToList();
+        var destinationIndex = target is null
+            ? destinationCards.Count
+            : destinationCards.FindIndex(card => card.Id == target.Model.Id) + (insertAfter ? 1 : 0);
+        if (destinationIndex < 0) return false;
+        destinationIndex = Math.Clamp(destinationIndex, 0, destinationCards.Count);
+        if (sourceGroupId == destinationGroup.Model.Id && currentIndex == destinationIndex) return false;
+
+        source.Model.GroupId = destinationGroup.Model.Id;
+        destinationCards.Insert(destinationIndex, source.Model);
+        for (var index = 0; index < destinationCards.Count; index++) destinationCards[index].SortOrder = index;
+        if (sourceGroupId != destinationGroup.Model.Id)
+        {
+            var remaining = Catalog.Cards.Where(card => card.GroupId == sourceGroupId)
+                .OrderBy(card => card.SortOrder).ThenBy(card => card.Title).ToArray();
+            for (var index = 0; index < remaining.Length; index++) remaining[index].SortOrder = index;
+        }
+
+        sourceGroup?.Cards.Remove(sourceViewModel);
+        var targetViewModel = target is null
+            ? null
+            : destinationGroup.Cards.FirstOrDefault(card => card.Model.Id == target.Model.Id);
+        var visibleIndex = targetViewModel is null
+            ? destinationGroup.Cards.Count
+            : destinationGroup.Cards.IndexOf(targetViewModel) + (insertAfter ? 1 : 0);
+        destinationGroup.Cards.Insert(Math.Clamp(visibleIndex, 0, destinationGroup.Cards.Count), sourceViewModel);
+        sourceGroup?.NotifyCardCountChanged();
+        if (!ReferenceEquals(sourceGroup, destinationGroup)) destinationGroup.NotifyCardCountChanged();
         return true;
     }
 

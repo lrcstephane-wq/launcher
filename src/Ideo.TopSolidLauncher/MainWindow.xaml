@@ -122,25 +122,51 @@
                                 <ItemsControl ItemsSource="{Binding FilterCategories}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Margin="2,0,0,18" AllowDrop="True" DragOver="FilterCategory_DragOver" Drop="FilterCategory_Drop">
+                                            <Border Margin="2,0,0,18" Background="Transparent" CornerRadius="7">
                                             <StackPanel>
-                                                <Grid Margin="0,0,0,7">
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                                    <TextBlock Text="⋮⋮" Foreground="#61758E" Cursor="SizeAll" ToolTip="Glisser pour réordonner la catégorie"
-                                                               PreviewMouseLeftButtonDown="FilterGrip_PreviewMouseLeftButtonDown" PreviewMouseMove="CategoryGrip_PreviewMouseMove"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" />
-                                                </Grid>
+                                                <Border CornerRadius="6" Padding="4,4" Margin="-4,0,0,5"
+                                                        Cursor="SizeNS" ToolTip="Maintenir puis déplacer toute la catégorie"
+                                                        AllowDrop="True" PreviewMouseLeftButtonDown="FilterRow_PreviewMouseLeftButtonDown"
+                                                        PreviewMouseMove="CategoryRow_PreviewMouseMove" DragOver="FilterCategory_DragOver"
+                                                        DragLeave="FilterRow_DragLeave" Drop="FilterCategory_Drop">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#1E2E42"/></Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="⠿" Foreground="#61758E" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" IsHitTestVisible="False"/>
+                                                    </Grid>
+                                                </Border>
                                                 <ItemsControl ItemsSource="{Binding Options}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <Grid AllowDrop="True" DragOver="FilterTag_DragOver" Drop="FilterTag_Drop">
-                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                                                <TextBlock Text="⋮⋮" Foreground="#53667E" Cursor="SizeAll" ToolTip="Glisser pour réordonner le tag"
-                                                                           PreviewMouseLeftButtonDown="FilterGrip_PreviewMouseLeftButtonDown" PreviewMouseMove="TagGrip_PreviewMouseMove"/>
-                                                                <CheckBox Grid.Column="1" IsChecked="{Binding IsSelected}" ToolTip="{Binding Description}">
-                                                                    <StackPanel Orientation="Horizontal"><Border Width="8" Height="8" CornerRadius="4" Background="{Binding Color}" Margin="0,0,7,0"/><TextBlock Text="{Binding Name}" Foreground="{StaticResource MutedBrush}"/></StackPanel>
-                                                                </CheckBox>
-                                                            </Grid>
+                                                            <Border CornerRadius="6" Padding="4,1" Margin="-4,0,0,1"
+                                                                    Cursor="SizeNS" ToolTip="Maintenir puis déplacer cette ligne"
+                                                                    AllowDrop="True" PreviewMouseLeftButtonDown="FilterRow_PreviewMouseLeftButtonDown"
+                                                                    PreviewMouseMove="TagRow_PreviewMouseMove" DragOver="FilterTag_DragOver"
+                                                                    DragLeave="FilterRow_DragLeave" Drop="FilterTag_Drop">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Background" Value="Transparent"/>
+                                                                        <Style.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#1B2A3D"/></Trigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                                    <TextBlock Text="⠿" Foreground="#53667E" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                                                    <CheckBox Grid.Column="1" IsChecked="{Binding IsSelected}" ToolTip="{Binding Description}" Cursor="SizeNS">
+                                                                        <StackPanel Orientation="Horizontal"><Border Width="8" Height="8" CornerRadius="4" Background="{Binding Color}" Margin="0,0,7,0"/><TextBlock Text="{Binding Name}" Foreground="{StaticResource MutedBrush}"/></StackPanel>
+                                                                    </CheckBox>
+                                                                </Grid>
+                                                            </Border>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
@@ -273,8 +299,10 @@
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Style="{StaticResource CardBorderStyle}" AllowDrop="True"
-                                                                DragOver="Card_DragOver" Drop="Card_Drop">
+                                                        <Border x:Name="CardRoot" Style="{StaticResource CardBorderStyle}" AllowDrop="True" Cursor="SizeAll"
+                                                                PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown" PreviewMouseMove="Card_PreviewMouseMove"
+                                                                DragOver="Card_DragOver" DragLeave="Card_DragLeave" Drop="Card_Drop"
+                                                                ToolTip="Maintenir puis déplacer la carte entière">
                                                             <Border.Effect><DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.23" Color="#05080C" /></Border.Effect>
                                                             <Grid ClipToBounds="True">
                                                                 <Grid.RowDefinitions><RowDefinition Height="10"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -287,8 +315,7 @@
                                                                     <Grid>
                                                                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                                                         <CheckBox IsChecked="{Binding IsSelected}" Margin="0,0,7,0" VerticalAlignment="Center" Visibility="{Binding DataContext.IsBulkSelectionMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}" ToolTip="Sélectionner cette carte"/>
-                                                                        <TextBlock Grid.Column="1" Text="⠿" FontSize="18" Foreground="#61758E" Cursor="SizeAll" Margin="0,0,8,0" VerticalAlignment="Center" ToolTip="Glisser pour déplacer"
-                                                                                   PreviewMouseLeftButtonDown="CardDragHandle_PreviewMouseLeftButtonDown" PreviewMouseMove="CardDragHandle_PreviewMouseMove"/>
+                                                                        <TextBlock Grid.Column="1" Text="⠿" FontSize="18" Foreground="#61758E" Margin="0,0,8,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
                                                                         <TextBlock Grid.Column="2" Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" VerticalAlignment="Center" />
                                                                         <Button Grid.Column="3" Content="{Binding FavoriteGlyph}" Style="{StaticResource GhostButton}" FontSize="19" Padding="5" Click="Favorite_Click" ToolTip="Ajouter/retirer des favoris" />
                                                                         <Button Grid.Column="4" Content="•••" Style="{StaticResource GhostButton}" Padding="5" Click="OpenCardMenu_Click">

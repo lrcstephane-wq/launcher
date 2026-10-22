@@ -1,5 +1,14 @@
 # Historique des versions
 
+## 0.4.1
+
+- nouveau logo fusée simplifié et plus lisible dans l’en-tête et la barre des tâches ;
+- déplacement des catégories et des tags en saisissant toute leur ligne ;
+- réorganisation visible en direct avec décalage animé de l’élément déplacé ;
+- repère bleu avant/après indiquant précisément la destination ;
+- déplacement des cartes depuis toute leur surface, avec animation des cartes voisines et prise en charge du mode compact ;
+- annulation sans modification si le glisser-déposer est interrompu.
+
 ## 0.4.0
 
 - nouvelle identité Idéo Launcher avec fusée dans l'en-tête, la fenêtre et la barre des tâches ;

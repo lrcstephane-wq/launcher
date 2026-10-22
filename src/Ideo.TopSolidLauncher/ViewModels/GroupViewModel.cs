@@ -28,4 +28,10 @@ public sealed class GroupViewModel : ObservableObject
         Cards = new ObservableCollection<CardViewModel>(cards);
         _isCollapsed = isCollapsed;
     }
+
+    public void NotifyCardCountChanged()
+    {
+        OnPropertyChanged(nameof(CardCount));
+        OnPropertyChanged(nameof(CountLabel));
+    }
 }
