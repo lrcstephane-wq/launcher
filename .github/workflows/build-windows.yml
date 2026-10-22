@@ -69,4 +69,4 @@ jobs:
           [xml]$project = Get-Content "src/Ideo.TopSolidLauncher/Ideo.TopSolidLauncher.csproj"
           $version = $project.Project.PropertyGroup.Version
           $tag = "v$version"
-          gh release create $tag publish/Launcher.exe --repo ${{ github.repository }} --target ${{ github.sha }} --title "Idéo Launcher $tag" --notes "Nouveau logo fusée, modes de lancement multiples, ressources Local/Nextcloud, ordre manuel stable, glisser-déposer amélioré, palette Ctrl+K, édition en lot, validation et historique. Migration automatique avec conservation des cartes existantes et sauvegarde préalable."
+          gh release create $tag publish/Launcher.exe --repo ${{ github.repository }} --target ${{ github.sha }} --title "Idéo Launcher $tag" --notes "Nouveau logo fusée simplifié. Les catégories, tags et cartes se déplacent maintenant depuis toute leur surface avec réorganisation animée et repère de destination, y compris en mode compact. Inclut les modes multiples, ressources Local/Nextcloud et la migration sans perte des cartes existantes."

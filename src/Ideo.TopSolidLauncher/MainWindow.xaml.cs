@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Ideo.TopSolidLauncher.Models;
 using Ideo.TopSolidLauncher.Services;
@@ -27,6 +28,16 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _catalogMonitorTimer;
     private bool _catalogReloadPending;
     private string? _unavailableSharedCatalogPath;
+    private Dictionary<Guid, (int CategoryOrder, int TagOrder)>? _filterOrderSnapshot;
+    private bool _filterReorderDirty;
+    private bool _filterReorderCommitted;
+    private FrameworkElement? _draggedFilterRow;
+    private Border? _activeFilterDropCue;
+    private Dictionary<Guid, (Guid GroupId, int SortOrder)>? _cardOrderSnapshot;
+    private bool _cardReorderDirty;
+    private bool _cardReorderCommitted;
+    private Guid? _draggedCardId;
+    private Border? _activeCardDropCue;
 
     public MainWindow()
     {
@@ -933,48 +944,114 @@ public partial class MainWindow : Window
         _dragStart = e.GetPosition(this);
     }
 
-    private void CardDragHandle_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) =>
-        _dragStart = e.GetPosition(this);
-
-    private void CardDragHandle_PreviewMouseMove(object sender, MouseEventArgs e)
-    {
-        if (e.LeftButton != MouseButtonState.Pressed || (sender as FrameworkElement)?.DataContext is not CardViewModel card) return;
-        var position = e.GetPosition(this);
-        if (Math.Abs(position.X - _dragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
-            Math.Abs(position.Y - _dragStart.Y) < SystemParameters.MinimumVerticalDragDistance) return;
-        DragDrop.DoDragDrop((DependencyObject)sender, card, DragDropEffects.Move);
-        e.Handled = true;
-    }
-
-    private void Card_MouseMove(object sender, MouseEventArgs e)
+    private void Card_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed || sender is not Border { DataContext: CardViewModel card } border)
             return;
-        if (FindAncestor<Button>(e.OriginalSource as DependencyObject) is not null)
+        if (FindAncestor<System.Windows.Controls.Primitives.ButtonBase>(e.OriginalSource as DependencyObject) is not null)
             return;
-        var position = e.GetPosition(this);
-        if (Math.Abs(position.X - _dragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
-            Math.Abs(position.Y - _dragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
-            return;
-        DragDrop.DoDragDrop(border, card, DragDropEffects.Move);
+        if (!PassedDragThreshold(e.GetPosition(this))) return;
+        StartCardDrag(border, card, e);
     }
 
-    private void Card_DragOver(object sender, DragEventArgs e) => SetDragEffect(e);
-    private void Group_DragOver(object sender, DragEventArgs e) => SetDragEffect(e);
-
-    private static void SetDragEffect(DragEventArgs e)
+    private void StartCardDrag(Border visual, CardViewModel card, MouseEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(typeof(CardViewModel)) ? DragDropEffects.Move : DragDropEffects.None;
+        _cardOrderSnapshot = _viewModel.Catalog.Cards.ToDictionary(
+            item => item.Id, item => (item.GroupId, item.SortOrder));
+        _cardReorderDirty = false;
+        _cardReorderCommitted = false;
+        _draggedCardId = card.Model.Id;
+        visual.Opacity = 0.5;
+        try
+        {
+            DragDrop.DoDragDrop(visual, card, DragDropEffects.Move);
+        }
+        finally
+        {
+            ClearCardDropCue();
+            if (!_cardReorderCommitted && _cardReorderDirty && _cardOrderSnapshot is not null)
+            {
+                foreach (var item in _viewModel.Catalog.Cards)
+                    if (_cardOrderSnapshot.TryGetValue(item.Id, out var order))
+                    {
+                        item.GroupId = order.GroupId;
+                        item.SortOrder = order.SortOrder;
+                    }
+                _viewModel.Rebuild();
+            }
+            SetDraggedCardOpacity(1);
+            _draggedCardId = null;
+            _cardOrderSnapshot = null;
+        }
+        e.Handled = true;
+    }
+
+    private void Card_DragOver(object sender, DragEventArgs e)
+    {
+        if (sender is not Border { DataContext: CardViewModel target } row ||
+            e.Data.GetData(typeof(CardViewModel)) is not CardViewModel source)
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        var destinationGroup = _viewModel.VisibleGroups.FirstOrDefault(group => group.Model.Id == target.Model.GroupId);
+        if (destinationGroup is null)
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        var insertAfter = e.GetPosition(row).X > row.ActualWidth / 2;
+        ShowCardDropCue(row, insertAfter);
+        var positions = PrepareCardLayoutAnimation();
+        if (_viewModel.ReorderCard(source, destinationGroup, target, insertAfter))
+        {
+            _cardReorderDirty = true;
+            AnimateCardLayout(positions);
+        }
+        e.Effects = DragDropEffects.Move;
+        e.Handled = true;
+    }
+
+    private void Group_DragOver(object sender, DragEventArgs e)
+    {
+        if (sender is not Border { DataContext: GroupViewModel destinationGroup } ||
+            e.Data.GetData(typeof(CardViewModel)) is not CardViewModel source)
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        ClearCardDropCue();
+        var positions = PrepareCardLayoutAnimation();
+        if (_viewModel.ReorderCard(source, destinationGroup, target: null, insertAfter: true))
+        {
+            _cardReorderDirty = true;
+            AnimateCardLayout(positions);
+        }
+        e.Effects = DragDropEffects.Move;
         e.Handled = true;
     }
 
     private void Card_Drop(object sender, DragEventArgs e)
     {
-        if (sender is not Border { DataContext: CardViewModel target } || e.Data.GetData(typeof(CardViewModel)) is not CardViewModel source || source.Model.Id == target.Model.Id)
+        if (sender is not Border { DataContext: CardViewModel target } row ||
+            e.Data.GetData(typeof(CardViewModel)) is not CardViewModel source)
             return;
-        var border = (Border)sender;
-        var insertAfter = e.GetPosition(border).X > border.ActualWidth / 2;
-        MoveCardTo(source.Model, target.Model.GroupId, target.Model.SortOrder + (insertAfter ? 1 : 0));
+        var destinationGroup = _viewModel.VisibleGroups.FirstOrDefault(group => group.Model.Id == target.Model.GroupId);
+        if (destinationGroup is not null && source.Model.Id != target.Model.Id)
+        {
+            var insertAfter = e.GetPosition(row).X > row.ActualWidth / 2;
+            _cardReorderDirty |= _viewModel.ReorderCard(source, destinationGroup, target, insertAfter);
+        }
+        if (_cardReorderDirty) SaveCatalog("L'ordre des cartes a été modifié");
+        _cardReorderCommitted = true;
+        ClearCardDropCue();
+        e.Effects = DragDropEffects.Move;
         e.Handled = true;
     }
 
@@ -982,40 +1059,134 @@ public partial class MainWindow : Window
     {
         if (sender is not Border { DataContext: GroupViewModel target } || e.Data.GetData(typeof(CardViewModel)) is not CardViewModel source)
             return;
-        var order = _viewModel.Catalog.Cards.Count(card => card.GroupId == target.Model.Id);
-        MoveCardTo(source.Model, target.Model.Id, order);
+        _cardReorderDirty |= _viewModel.ReorderCard(source, target, target: null, insertAfter: true);
+        if (_cardReorderDirty) SaveCatalog("La carte a été déplacée");
+        _cardReorderCommitted = true;
+        ClearCardDropCue();
+        e.Effects = DragDropEffects.Move;
         e.Handled = true;
     }
 
-    private void MoveCardTo(LauncherCard card, Guid destinationGroupId, int destinationOrder)
+    private void Card_DragLeave(object sender, DragEventArgs e) => ClearCardDropCue();
+
+    private void ShowCardDropCue(Border row, bool insertAfter)
     {
-        var sourceGroupId = card.GroupId;
-        var destinationCards = _viewModel.Catalog.Cards
-            .Where(item => item.GroupId == destinationGroupId && item.Id != card.Id)
-            .OrderBy(item => item.SortOrder).ToList();
-        destinationOrder = Math.Clamp(destinationOrder, 0, destinationCards.Count);
-        card.GroupId = destinationGroupId;
-        destinationCards.Insert(destinationOrder, card);
-        for (var i = 0; i < destinationCards.Count; i++) destinationCards[i].SortOrder = i;
-        if (sourceGroupId != destinationGroupId) ReindexCards(sourceGroupId);
-        SaveCatalog("La carte a été déplacée");
+        if (!ReferenceEquals(_activeCardDropCue, row)) ClearCardDropCue();
+        _activeCardDropCue = row;
+        row.BorderBrush = new SolidColorBrush(Color.FromRgb(77, 139, 212));
+        row.BorderThickness = insertAfter ? new Thickness(1, 1, 4, 1) : new Thickness(4, 1, 1, 1);
     }
 
-    private void FilterGrip_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _dragStart = e.GetPosition(this);
+    private void ClearCardDropCue()
+    {
+        if (_activeCardDropCue is null) return;
+        _activeCardDropCue.ClearValue(Border.BorderBrushProperty);
+        _activeCardDropCue.ClearValue(Border.BorderThicknessProperty);
+        _activeCardDropCue = null;
+    }
 
-    private void CategoryGrip_PreviewMouseMove(object sender, MouseEventArgs e)
+    private Dictionary<Guid, Point> PrepareCardLayoutAnimation()
+    {
+        var positions = new Dictionary<Guid, Point>();
+        foreach (var visual in CardVisuals(this))
+        {
+            if (visual.DataContext is not CardViewModel card) continue;
+            positions[card.Model.Id] = visual.TranslatePoint(new Point(), this);
+        }
+        return positions;
+    }
+
+    private void AnimateCardLayout(IReadOnlyDictionary<Guid, Point> previousPositions)
+    {
+        foreach (var visual in CardVisuals(this)) visual.ClearValue(RenderTransformProperty);
+        UpdateLayout();
+        foreach (var visual in CardVisuals(this))
+        {
+            if (visual.DataContext is not CardViewModel card || !previousPositions.TryGetValue(card.Model.Id, out var previous))
+                continue;
+            var current = visual.TranslatePoint(new Point(), this);
+            var deltaX = previous.X - current.X;
+            var deltaY = previous.Y - current.Y;
+            if (Math.Abs(deltaX) < 0.5 && Math.Abs(deltaY) < 0.5) continue;
+            var transform = new TranslateTransform(deltaX, deltaY);
+            visual.RenderTransform = transform;
+            var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+            transform.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation
+            {
+                From = deltaX, To = 0, Duration = TimeSpan.FromMilliseconds(185), EasingFunction = easing
+            });
+            transform.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation
+            {
+                From = deltaY, To = 0, Duration = TimeSpan.FromMilliseconds(185), EasingFunction = easing
+            });
+        }
+        SetDraggedCardOpacity(0.5);
+    }
+
+    private void SetDraggedCardOpacity(double opacity)
+    {
+        if (_draggedCardId is not { } cardId) return;
+        var visual = CardVisuals(this).FirstOrDefault(item => item.DataContext is CardViewModel card && card.Model.Id == cardId);
+        if (visual is not null) visual.Opacity = opacity;
+    }
+
+    private static IEnumerable<Border> CardVisuals(DependencyObject root)
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(root); index++)
+        {
+            var child = VisualTreeHelper.GetChild(root, index);
+            if (child is Border { Name: "CardRoot", DataContext: CardViewModel }) yield return (Border)child;
+            foreach (var descendant in CardVisuals(child)) yield return descendant;
+        }
+    }
+
+    private void FilterRow_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _dragStart = e.GetPosition(this);
+
+    private void CategoryRow_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed || (sender as FrameworkElement)?.DataContext is not FilterCategoryViewModel category) return;
         if (!PassedDragThreshold(e.GetPosition(this))) return;
-        DragDrop.DoDragDrop((DependencyObject)sender, category, DragDropEffects.Move);
-        e.Handled = true;
+        var source = (DependencyObject)sender;
+        var visual = FindAncestor<Border>(VisualTreeHelper.GetParent(source)) ?? (FrameworkElement)sender;
+        StartFilterDrag(visual, category, e);
     }
 
-    private void TagGrip_PreviewMouseMove(object sender, MouseEventArgs e)
+    private void TagRow_PreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed || (sender as FrameworkElement)?.DataContext is not FilterOptionViewModel option) return;
         if (!PassedDragThreshold(e.GetPosition(this))) return;
-        DragDrop.DoDragDrop((DependencyObject)sender, option, DragDropEffects.Move);
+        StartFilterDrag((FrameworkElement)sender, option, e);
+    }
+
+    private void StartFilterDrag(FrameworkElement visual, object data, MouseEventArgs e)
+    {
+        _filterOrderSnapshot = _viewModel.Catalog.Tags.ToDictionary(
+            tag => tag.Id, tag => (tag.CategorySortOrder, tag.SortOrder));
+        _filterReorderDirty = false;
+        _filterReorderCommitted = false;
+        _draggedFilterRow = visual;
+        visual.Opacity = 0.42;
+        try
+        {
+            DragDrop.DoDragDrop(visual, data, DragDropEffects.Move);
+        }
+        finally
+        {
+            visual.Opacity = 1;
+            ClearFilterDropCue();
+            if (!_filterReorderCommitted && _filterReorderDirty && _filterOrderSnapshot is not null)
+            {
+                foreach (var tag in _viewModel.Catalog.Tags)
+                    if (_filterOrderSnapshot.TryGetValue(tag.Id, out var order))
+                    {
+                        tag.CategorySortOrder = order.CategoryOrder;
+                        tag.SortOrder = order.TagOrder;
+                    }
+                _viewModel.Rebuild();
+            }
+            _draggedFilterRow = null;
+            _filterOrderSnapshot = null;
+        }
         e.Handled = true;
     }
 
@@ -1025,7 +1196,22 @@ public partial class MainWindow : Window
 
     private void FilterCategory_DragOver(object sender, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(typeof(FilterCategoryViewModel)) ? DragDropEffects.Move : DragDropEffects.None;
+        if (sender is not Border row || row.DataContext is not FilterCategoryViewModel target ||
+            e.Data.GetData(typeof(FilterCategoryViewModel)) is not FilterCategoryViewModel source)
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+        var insertAfter = e.GetPosition(row).Y > row.ActualHeight / 2;
+        var movingDown = _viewModel.FilterCategories.IndexOf(source) < _viewModel.FilterCategories.IndexOf(target);
+        ShowFilterDropCue(FindAncestor<Border>(VisualTreeHelper.GetParent(row)) ?? row, insertAfter);
+        if (_viewModel.ReorderCategory(source, target, insertAfter))
+        {
+            _filterReorderDirty = true;
+            AnimateFilterMovement(movingDown);
+        }
+        e.Effects = DragDropEffects.Move;
         e.Handled = true;
     }
 
@@ -1033,14 +1219,36 @@ public partial class MainWindow : Window
     {
         if ((sender as FrameworkElement)?.DataContext is not FilterCategoryViewModel target ||
             e.Data.GetData(typeof(FilterCategoryViewModel)) is not FilterCategoryViewModel source) return;
-        _viewModel.ReorderCategory(source, target);
-        SaveCatalog("L'ordre des catégories de tags a été modifié");
+        var row = (FrameworkElement)sender;
+        var insertAfter = e.GetPosition(row).Y > row.ActualHeight / 2;
+        _filterReorderDirty |= _viewModel.ReorderCategory(source, target, insertAfter);
+        if (_filterReorderDirty) SaveCatalog("L'ordre des catégories de tags a été modifié");
+        _filterReorderCommitted = true;
+        e.Effects = DragDropEffects.Move;
+        ClearFilterDropCue();
         e.Handled = true;
     }
 
     private void FilterTag_DragOver(object sender, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(typeof(FilterOptionViewModel)) ? DragDropEffects.Move : DragDropEffects.None;
+        if (sender is not Border row || row.DataContext is not FilterOptionViewModel target ||
+            e.Data.GetData(typeof(FilterOptionViewModel)) is not FilterOptionViewModel source ||
+            !source.Tag.Category.Equals(target.Tag.Category, StringComparison.CurrentCultureIgnoreCase))
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+        var insertAfter = e.GetPosition(row).Y > row.ActualHeight / 2;
+        var category = _viewModel.FilterCategories.First(item => item.Name.Equals(source.Tag.Category, StringComparison.CurrentCultureIgnoreCase));
+        var movingDown = category.Options.IndexOf(source) < category.Options.IndexOf(target);
+        ShowFilterDropCue(row, insertAfter);
+        if (_viewModel.ReorderTag(source, target, insertAfter))
+        {
+            _filterReorderDirty = true;
+            AnimateFilterMovement(movingDown);
+        }
+        e.Effects = DragDropEffects.Move;
         e.Handled = true;
     }
 
@@ -1048,8 +1256,52 @@ public partial class MainWindow : Window
     {
         if ((sender as FrameworkElement)?.DataContext is not FilterOptionViewModel target ||
             e.Data.GetData(typeof(FilterOptionViewModel)) is not FilterOptionViewModel source) return;
-        if (_viewModel.ReorderTag(source, target)) SaveCatalog("L'ordre des tags a été modifié");
+        var row = (FrameworkElement)sender;
+        var insertAfter = e.GetPosition(row).Y > row.ActualHeight / 2;
+        _filterReorderDirty |= _viewModel.ReorderTag(source, target, insertAfter);
+        if (_filterReorderDirty) SaveCatalog("L'ordre des tags a été modifié");
+        _filterReorderCommitted = true;
+        e.Effects = DragDropEffects.Move;
+        ClearFilterDropCue();
         e.Handled = true;
+    }
+
+    private void FilterRow_DragLeave(object sender, DragEventArgs e)
+    {
+        ClearFilterDropCue();
+    }
+
+    private void ShowFilterDropCue(Border row, bool insertAfter)
+    {
+        if (!ReferenceEquals(_activeFilterDropCue, row)) ClearFilterDropCue();
+        _activeFilterDropCue = row;
+        row.Background = new SolidColorBrush(Color.FromArgb(105, 38, 72, 111));
+        row.BorderBrush = new SolidColorBrush(Color.FromRgb(77, 139, 212));
+        row.BorderThickness = insertAfter ? new Thickness(0, 0, 0, 2) : new Thickness(0, 2, 0, 0);
+    }
+
+    private void ClearFilterDropCue()
+    {
+        if (_activeFilterDropCue is null) return;
+        _activeFilterDropCue.ClearValue(Border.BackgroundProperty);
+        _activeFilterDropCue.ClearValue(Border.BorderBrushProperty);
+        _activeFilterDropCue.ClearValue(Border.BorderThicknessProperty);
+        _activeFilterDropCue = null;
+    }
+
+    private void AnimateFilterMovement(bool movingDown)
+    {
+        if (_draggedFilterRow is null) return;
+        var distance = Math.Max(10, _draggedFilterRow.ActualHeight * 0.7);
+        var transform = new TranslateTransform();
+        _draggedFilterRow.RenderTransform = transform;
+        transform.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation
+        {
+            From = movingDown ? -distance : distance,
+            To = 0,
+            Duration = TimeSpan.FromMilliseconds(145),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        });
     }
 
     #endregion

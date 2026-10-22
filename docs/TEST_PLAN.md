@@ -34,8 +34,12 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 
 - créer, renommer, déplacer puis supprimer un groupe ;
 - réordonner les cartes par menu et glisser-déposer en modes détaillé et compact ;
+- saisir une carte depuis toute zone non interactive, vérifier l’animation des cartes voisines et le repère bleu avant/après ;
+- confirmer que les boutons, cases à cocher et menus d’une carte restent cliquables sans déclencher un déplacement ;
 - ajouter/retirer un favori et lancer plusieurs cartes, puis confirmer qu'aucune carte ne change de place automatiquement ;
 - réordonner les catégories et les tags avec leurs poignées ;
+- saisir une catégorie puis un tag depuis toute la largeur de leur ligne, vérifier le déplacement animé et le repère avant/après ;
+- annuler un déplacement avec `Échap` et vérifier que l’ordre initial est restauré ;
 - sélectionner deux tags dans une catégorie et confirmer le `OU` ;
 - sélectionner une seconde catégorie et confirmer le `ET` ;
 - combiner recherche texte et filtres ;
