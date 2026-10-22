@@ -20,6 +20,7 @@ public partial class TagEditorWindow : Window
             Category = tag.Category,
             Description = tag.Description,
             Color = tag.Color,
+            CategorySortOrder = tag.CategorySortOrder,
             SortOrder = tag.SortOrder
         };
         NameTextBox.Text = tag.Name;

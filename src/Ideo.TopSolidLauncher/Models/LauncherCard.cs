@@ -11,6 +11,10 @@ public sealed class LauncherCard
     public string WorkingDirectory { get; set; } = string.Empty;
     public string LogoPath { get; set; } = string.Empty;
     public string AccentColor { get; set; } = "#2E69B3";
+    public Guid DefaultLaunchProfileId { get; set; }
+    public List<LauncherLaunchProfile> LaunchProfiles { get; set; } = [];
+
+    // Propriétés du schéma 2 conservées uniquement pour la migration automatique.
     public List<LauncherQuickAccess> QuickAccessLinks { get; set; } = [];
     public List<Guid> TagIds { get; set; } = [];
     public int SortOrder { get; set; }
@@ -30,6 +34,8 @@ public sealed class LauncherCard
             WorkingDirectory = WorkingDirectory,
             LogoPath = LogoPath,
             AccentColor = AccentColor,
+            DefaultLaunchProfileId = DefaultLaunchProfileId,
+            LaunchProfiles = LaunchProfiles.Select(profile => profile.Clone()).ToList(),
             QuickAccessLinks = QuickAccessLinks.Select(link => link.Clone()).ToList(),
             TagIds = [.. TagIds],
             SortOrder = SortOrder,

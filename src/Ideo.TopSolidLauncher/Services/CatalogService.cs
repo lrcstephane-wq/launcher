@@ -6,6 +6,7 @@ namespace Ideo.TopSolidLauncher.Services;
 public sealed class CatalogService
 {
     private const int BackupRetention = 20;
+    private const int AuditRetention = 250;
     private DateTime? _knownWriteUtc;
 
     public string CatalogPath { get; private set; }
@@ -22,7 +23,7 @@ public sealed class CatalogService
         if (!File.Exists(CatalogPath))
         {
             var catalog = DefaultCatalogFactory.Create();
-            Save(catalog, createBackup: false);
+            Save(catalog, createBackup: false, auditAction: "Création du catalogue");
             return catalog;
         }
 
@@ -33,9 +34,21 @@ public sealed class CatalogService
         return loaded;
     }
 
-    public void Save(LauncherCatalog catalog, bool createBackup = true)
+    public void Save(LauncherCatalog catalog, bool createBackup = true, string? auditAction = null)
     {
         Normalize(catalog);
+        if (!string.IsNullOrWhiteSpace(auditAction))
+        {
+            catalog.AuditTrail.Add(new CatalogAuditEntry
+            {
+                TimestampUtc = DateTime.UtcNow,
+                UserName = Environment.UserName,
+                MachineName = Environment.MachineName,
+                Action = auditAction.Trim()
+            });
+            if (catalog.AuditTrail.Count > AuditRetention)
+                catalog.AuditTrail = catalog.AuditTrail.OrderByDescending(entry => entry.TimestampUtc).Take(AuditRetention).OrderBy(entry => entry.TimestampUtc).ToList();
+        }
         catalog.UpdatedUtc = DateTime.UtcNow;
 
         if (createBackup && File.Exists(CatalogPath) && _knownWriteUtc is not null &&
@@ -137,6 +150,18 @@ public sealed class CatalogService
         return catalog;
     }
 
+    public IReadOnlyList<CatalogBackupInfo> GetBackups()
+    {
+        var folder = Path.Combine(Path.GetDirectoryName(CatalogPath)!, "Backups");
+        if (!Directory.Exists(folder))
+            return [];
+        return Directory.EnumerateFiles(folder, "catalog-*.json")
+            .Select(path => new FileInfo(path))
+            .OrderByDescending(file => file.LastWriteTimeUtc)
+            .Select(file => new CatalogBackupInfo(file.FullName, file.LastWriteTime, file.Length))
+            .ToArray();
+    }
+
     private void CreateBackup()
     {
         var folder = Path.Combine(Path.GetDirectoryName(CatalogPath)!, "Backups");
@@ -165,14 +190,17 @@ public sealed class CatalogService
             throw new InvalidDataException(
                 $"Ce catalogue utilise le format {catalog.SchemaVersion}, plus récent que celui pris en charge par cette version du launcher.");
 
-        catalog.SchemaVersion = LauncherCatalog.CurrentSchemaVersion;
+        var sourceSchemaVersion = catalog.SchemaVersion;
         catalog.Groups ??= [];
         catalog.Tags ??= [];
         catalog.Cards ??= [];
+        catalog.Resources ??= [];
+        catalog.AuditTrail ??= [];
 
         EnsureUniqueIds(catalog.Groups.Select(group => group.Id), "groupes");
         EnsureUniqueIds(catalog.Tags.Select(tag => tag.Id), "tags");
         EnsureUniqueIds(catalog.Cards.Select(card => card.Id), "cartes");
+        EnsureUniqueIds(catalog.Resources.Select(resource => resource.Id), "ressources");
 
         if (catalog.Groups.Count == 0)
             catalog.Groups.Add(new LauncherGroup { Name = "Mes applications" });
@@ -188,6 +216,17 @@ public sealed class CatalogService
             tag.Color = NormalizeColor(tag.Color, "#315D9D");
         }
 
+        if (sourceSchemaVersion < 4)
+        {
+            var orderedCategories = catalog.Tags.Select(tag => tag.Category)
+                .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                .OrderBy(CategoryOrder).ThenBy(category => category, StringComparer.CurrentCultureIgnoreCase)
+                .ToArray();
+            for (var index = 0; index < orderedCategories.Length; index++)
+                foreach (var tag in catalog.Tags.Where(tag => tag.Category.Equals(orderedCategories[index], StringComparison.CurrentCultureIgnoreCase)))
+                    tag.CategorySortOrder = index;
+        }
+
         var defaultGroup = catalog.Groups.OrderBy(group => group.SortOrder).First().Id;
         foreach (var card in catalog.Cards)
         {
@@ -198,8 +237,85 @@ public sealed class CatalogService
             card.WorkingDirectory = card.WorkingDirectory?.Trim() ?? string.Empty;
             card.LogoPath = card.LogoPath?.Trim() ?? string.Empty;
             card.AccentColor = NormalizeColor(card.AccentColor, "#2E69B3");
-            card.QuickAccessLinks ??= [];
-            card.QuickAccessLinks = card.QuickAccessLinks
+            card.LaunchProfiles ??= [];
+            if (card.LaunchProfiles.Count == 0)
+            {
+                var migratedProfile = new LauncherLaunchProfile
+                {
+                    // Une ancienne carte ne possède pas encore d'identifiant de mode.
+                    // Réutiliser son identifiant rend la migration stable tant que le
+                    // catalogue partagé n'a pas encore été enregistré au format 4.
+                    Id = card.Id,
+                    Name = "Par défaut",
+                    TargetPath = card.TargetPath,
+                    Arguments = card.Arguments,
+                    WorkingDirectory = card.WorkingDirectory,
+                    QuickAccessLinks = card.QuickAccessLinks?.Select(link => link.Clone()).ToList() ?? [],
+                    RunAsAdministrator = card.RunAsAdministrator,
+                    MinimizeAfterLaunch = card.MinimizeAfterLaunch,
+                    SortOrder = 0
+                };
+                card.LaunchProfiles.Add(migratedProfile);
+                card.DefaultLaunchProfileId = migratedProfile.Id;
+            }
+            NormalizeProfiles(card);
+            card.DefaultLaunchProfileId = card.LaunchProfiles.Any(profile => profile.Id == card.DefaultLaunchProfileId)
+                ? card.DefaultLaunchProfileId
+                : card.LaunchProfiles.OrderBy(profile => profile.SortOrder).First().Id;
+
+            // Le schéma 4 ne relit plus ces valeurs ; elles restent uniquement pour accepter les anciens JSON.
+            card.TargetPath = string.Empty;
+            card.Arguments = string.Empty;
+            card.WorkingDirectory = string.Empty;
+            card.QuickAccessLinks = [];
+            card.RunAsAdministrator = false;
+            card.MinimizeAfterLaunch = false;
+            card.GroupId = catalog.Groups.Any(group => group.Id == card.GroupId) ? card.GroupId : defaultGroup;
+            card.TagIds ??= [];
+            card.TagIds = card.TagIds.Distinct().Where(id => catalog.Tags.Any(tag => tag.Id == id)).ToList();
+        }
+
+        foreach (var defaultResource in DefaultCatalogFactory.CreateDefaultResources())
+        {
+            if (catalog.Resources.All(resource => resource.Id != defaultResource.Id))
+                catalog.Resources.Add(defaultResource);
+        }
+        foreach (var resource in catalog.Resources)
+        {
+            resource.Name = string.IsNullOrWhiteSpace(resource.Name) ? "Ressource sans nom" : resource.Name.Trim();
+            resource.IconGlyph = string.IsNullOrWhiteSpace(resource.IconGlyph) ? "\uE8B7" : resource.IconGlyph;
+            resource.Locations ??= [];
+            EnsureUniqueIds(resource.Locations.Select(location => location.Id), $"emplacements de la ressource « {resource.Name} »");
+            foreach (var location in resource.Locations)
+            {
+                location.Name = string.IsNullOrWhiteSpace(location.Name) ? "Emplacement" : location.Name.Trim();
+                location.Target = location.Target?.Trim().Trim('"') ?? string.Empty;
+            }
+            resource.DefaultLocationId = resource.Locations.Any(location => location.Id == resource.DefaultLocationId)
+                ? resource.DefaultLocationId
+                : resource.Locations.OrderBy(location => location.SortOrder).FirstOrDefault()?.Id ?? Guid.Empty;
+        }
+
+        catalog.AuditTrail = catalog.AuditTrail
+            .Where(entry => !string.IsNullOrWhiteSpace(entry.Action))
+            .OrderByDescending(entry => entry.TimestampUtc)
+            .Take(AuditRetention)
+            .OrderBy(entry => entry.TimestampUtc)
+            .ToList();
+        catalog.SchemaVersion = LauncherCatalog.CurrentSchemaVersion;
+    }
+
+    private static void NormalizeProfiles(LauncherCard card)
+    {
+        EnsureUniqueIds(card.LaunchProfiles.Select(profile => profile.Id), $"modes de la carte « {card.Title} »");
+        foreach (var profile in card.LaunchProfiles)
+        {
+            profile.Name = string.IsNullOrWhiteSpace(profile.Name) ? "Mode sans nom" : profile.Name.Trim();
+            profile.TargetPath = profile.TargetPath?.Trim().Trim('"') ?? string.Empty;
+            profile.Arguments = profile.Arguments?.Trim() ?? string.Empty;
+            profile.WorkingDirectory = profile.WorkingDirectory?.Trim().Trim('"') ?? string.Empty;
+            profile.QuickAccessLinks ??= [];
+            profile.QuickAccessLinks = profile.QuickAccessLinks
                 .Where(link => !string.IsNullOrWhiteSpace(link.Label) || !string.IsNullOrWhiteSpace(link.Path))
                 .Select(link => new LauncherQuickAccess
                 {
@@ -207,9 +323,6 @@ public sealed class CatalogService
                     Path = link.Path?.Trim().Trim('"') ?? string.Empty
                 })
                 .ToList();
-            card.GroupId = catalog.Groups.Any(group => group.Id == card.GroupId) ? card.GroupId : defaultGroup;
-            card.TagIds ??= [];
-            card.TagIds = card.TagIds.Distinct().Where(id => catalog.Tags.Any(tag => tag.Id == id)).ToList();
         }
     }
 
@@ -229,4 +342,20 @@ public sealed class CatalogService
             ? $"#{value.ToUpperInvariant()}"
             : fallback;
     }
+
+    private static int CategoryOrder(string category) => category.ToUpperInvariant() switch
+    {
+        "USAGE" => 0,
+        "VERSION" => 1,
+        "CHANTS" => 2,
+        "ANNÉE" or "ANNEE" => 3,
+        "CLIENT" => 4,
+        "APPLICATION" => 5,
+        _ => 100
+    };
+}
+
+public sealed record CatalogBackupInfo(string Path, DateTime CreatedLocal, long SizeBytes)
+{
+    public string DisplayName => $"{CreatedLocal:dd/MM/yyyy HH:mm:ss}  ·  {Math.Max(1, SizeBytes / 1024)} Ko";
 }

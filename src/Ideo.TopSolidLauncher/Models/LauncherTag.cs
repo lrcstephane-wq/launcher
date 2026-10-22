@@ -7,5 +7,6 @@ public sealed class LauncherTag
     public string Category { get; set; } = "Autre";
     public string Description { get; set; } = string.Empty;
     public string Color { get; set; } = "#315D9D";
+    public int CategorySortOrder { get; set; }
     public int SortOrder { get; set; }
 }

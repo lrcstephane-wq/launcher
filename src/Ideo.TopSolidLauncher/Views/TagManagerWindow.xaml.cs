@@ -31,6 +31,10 @@ public partial class TagManagerWindow : Window
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
+        var existingCategory = _catalog.Tags.FirstOrDefault(tag => tag.Category.Equals(dialog.Result.Category, StringComparison.CurrentCultureIgnoreCase));
+        dialog.Result.CategorySortOrder = existingCategory?.CategorySortOrder
+                                         ?? (_catalog.Tags.Count == 0 ? 0 : _catalog.Tags.Max(tag => tag.CategorySortOrder) + 1);
+        dialog.Result.SortOrder = _catalog.Tags.Count(tag => tag.Category.Equals(dialog.Result.Category, StringComparison.CurrentCultureIgnoreCase));
         _catalog.Tags.Add(dialog.Result);
         HasChanges = true;
         RefreshList();
@@ -51,6 +55,9 @@ public partial class TagManagerWindow : Window
         tag.Category = dialog.Result.Category;
         tag.Description = dialog.Result.Description;
         tag.Color = dialog.Result.Color;
+        var categoryPeer = _catalog.Tags.FirstOrDefault(item => item.Id != tag.Id && item.Category.Equals(dialog.Result.Category, StringComparison.CurrentCultureIgnoreCase));
+        tag.CategorySortOrder = categoryPeer?.CategorySortOrder
+                                ?? (_catalog.Tags.Where(item => item.Id != tag.Id).Select(item => item.CategorySortOrder).DefaultIfEmpty(-1).Max() + 1);
         HasChanges = true;
         RefreshList();
     }
@@ -74,7 +81,7 @@ public partial class TagManagerWindow : Window
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
     private void RefreshList() => TagsList.ItemsSource = _catalog.Tags
-        .OrderBy(tag => tag.Category).ThenBy(tag => tag.SortOrder).ThenBy(tag => tag.Name).ToArray();
+        .OrderBy(tag => tag.CategorySortOrder).ThenBy(tag => tag.SortOrder).ThenBy(tag => tag.Name).ToArray();
 
     private IEnumerable<string> ExistingCategories() => _catalog.Tags
         .Select(tag => tag.Category)

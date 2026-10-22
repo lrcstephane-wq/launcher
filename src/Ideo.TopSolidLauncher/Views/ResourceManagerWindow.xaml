@@ -1,0 +1,37 @@
+<Window x:Class="Ideo.TopSolidLauncher.Views.ResourceManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Ressources partagées" Width="780" Height="610" MinWidth="680" MinHeight="500"
+        Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextBrush}"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Border Background="{StaticResource HeaderBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="28,20">
+            <Grid>
+                <StackPanel><TextBlock Text="Ressources partagées" Style="{StaticResource DialogHeading}"/><TextBlock Text="Dossiers, fichiers ou liens utiles accessibles depuis le panneau gauche." Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0"/></StackPanel>
+                <Button Content="+ Nouvelle ressource" HorizontalAlignment="Right" VerticalAlignment="Center" Click="Add_Click"/>
+            </Grid>
+        </Border>
+        <ListBox x:Name="ResourcesList" Grid.Row="1" Margin="28,20" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource SectionCard}" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="48"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="25" Foreground="#8BB9EF" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="15"/><TextBlock Text="{Binding LocationSummary}" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,4,0,0"/></StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="↑" Style="{StaticResource GhostButton}" Click="MoveUp_Click"/><Button Content="↓" Style="{StaticResource GhostButton}" Click="MoveDown_Click"/>
+                                <Button Content="Modifier" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Click="Edit_Click"/>
+                                <Button Content="Supprimer" Style="{StaticResource GhostButton}" Margin="4,0,0,0" Click="Delete_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Border Grid.Row="2" Background="{StaticResource FooterBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="22,14">
+            <Button Content="Terminer" HorizontalAlignment="Right" IsDefault="True" Click="Close_Click"/>
+        </Border>
+    </Grid>
+</Window>

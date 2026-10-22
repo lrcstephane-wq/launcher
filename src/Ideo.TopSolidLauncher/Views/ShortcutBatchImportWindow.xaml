@@ -1,0 +1,12 @@
+<Window x:Class="Ideo.TopSolidLauncher.Views.ShortcutBatchImportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Importer des raccourcis" Width="900" Height="650" MinWidth="760" MinHeight="520"
+        Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextBrush}" WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Border Background="{StaticResource HeaderBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="28,20"><StackPanel><TextBlock Text="Importer plusieurs raccourcis" Style="{StaticResource DialogHeading}"/><TextBlock Text="Vérifiez la sélection avant de créer les cartes." Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0"/></StackPanel></Border>
+        <ListBox x:Name="ItemsList" Grid.Row="1" Margin="28,20" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
+            <ListBox.ItemTemplate><DataTemplate><Border Style="{StaticResource SectionCard}" Margin="0,0,0,7"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="210"/><ColumnDefinition Width="*"/><ColumnDefinition Width="130"/></Grid.ColumnDefinitions><CheckBox IsChecked="{Binding IsSelected}" IsEnabled="{Binding CanImport}"/><TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/><TextBlock Grid.Column="2" Text="{Binding TargetPath}" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" Margin="8,0"/><TextBlock Grid.Column="3" Text="{Binding Status}" Foreground="#E0A35D" HorizontalAlignment="Right"/></Grid></Border></DataTemplate></ListBox.ItemTemplate>
+        </ListBox>
+        <Border Grid.Row="2" Background="{StaticResource FooterBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="22,14"><Grid><TextBlock x:Name="SummaryText" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Annuler" IsCancel="True" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/><Button Content="Importer la sélection" IsDefault="True" Click="Import_Click"/></StackPanel></Grid></Border>
+    </Grid>
+</Window>
