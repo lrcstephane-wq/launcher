@@ -7,7 +7,10 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 - lancer l'exécutable sans aucun dossier `%APPDATA%\Ideo\Launcher` ;
 - vérifier la création du catalogue et des cartes TopSolid détectées ;
 - fermer puis rouvrir et vérifier que les données sont conservées ;
-- lancer depuis la version précédente et vérifier que la mise à jour ne supprime aucune donnée.
+- ouvrir un catalogue 0.3.2 comportant plusieurs cartes configurées ;
+- vérifier pour chaque carte la conservation de l'identifiant, du titre, du groupe, des tags, de l'ordre, du logo, de la couleur, de la cible, des arguments, du dossier de travail, des accès rapides et des options ;
+- vérifier que l'ancienne commande devient un seul mode **Par défaut** et qu'une sauvegarde du JSON 0.3.2 est créée avant la première écriture ;
+- exécuter le projet `Ideo.TopSolidLauncher.RegressionChecks` et attendre `Migration v0.3.2 -> v0.4.0 : OK`.
 
 ## Cartes
 
@@ -19,6 +22,9 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 - vérifier une carte avec cible absente : message visible et lancement désactivé ;
 - lancer normalement puis en administrateur ;
 - vérifier le comportement avec et sans réduction automatique.
+- créer les modes `Local` et `Distant · Nextcloud`, les réordonner, les dupliquer et changer le mode par défaut ;
+- lancer le mode choisi dans la flèche, redémarrer puis vérifier que le bouton principal réutilise ce mode uniquement sur le poste courant ;
+- vérifier qu'un mode inaccessible reste listé mais désactivé ;
 - ajouter des accès rapides par sélection et par glisser-déposer ;
 - ouvrir un dossier local et un partage réseau valide sans message de succès ;
 - vérifier l'alerte sur un dossier absent et la copie du chemin ;
@@ -27,8 +33,9 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 ## Organisation et filtres
 
 - créer, renommer, déplacer puis supprimer un groupe ;
-- réordonner les cartes par menu et glisser-déposer ;
-- ajouter/retirer un favori et lancer plusieurs cartes pour contrôler l'ordre des récents ;
+- réordonner les cartes par menu et glisser-déposer en modes détaillé et compact ;
+- ajouter/retirer un favori et lancer plusieurs cartes, puis confirmer qu'aucune carte ne change de place automatiquement ;
+- réordonner les catégories et les tags avec leurs poignées ;
 - sélectionner deux tags dans une catégorie et confirmer le `OU` ;
 - sélectionner une seconde catégorie et confirmer le `ET` ;
 - combiner recherche texte et filtres ;
@@ -38,6 +45,8 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 - masquer puis réafficher les filtres et contrôler la persistance au redémarrage ;
 - replier un groupe et contrôler la persistance au redémarrage ;
 - vérifier les modes détaillé et compact.
+- sélectionner plusieurs cartes et tester le changement de groupe, les tags, l'accès rapide commun et le remplacement de racine ;
+- ouvrir `Ctrl+K`, rechercher une carte et un mode, naviguer au clavier et lancer avec `Entrée`.
 
 ## Interface
 
@@ -46,6 +55,8 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 - vérifier les ascenseurs de toutes les fenêtres et les menus `•••`/clic droit en thème sombre ;
 - ouvrir la page de téléchargements TopSolid depuis le panneau gauche et depuis le menu principal ;
 - créer un tag en choisissant une catégorie existante, puis en saisissant une nouvelle catégorie.
+- vérifier les icônes des menus principal et cartes, ainsi que le logo fusée dans l'en-tête, la fenêtre et la barre des tâches.
+- déposer plusieurs raccourcis `.lnk`, décocher une ligne puis importer la sélection.
 
 ## Données et partage
 
@@ -58,6 +69,10 @@ Ce plan est à exécuter sur Windows avant chaque publication stable.
 - revenir au catalogue local et vérifier que le catalogue partagé n'est pas supprimé ;
 - recharger le catalogue avec `F5` ;
 - redétecter TopSolid sans créer de doublons.
+- créer la ressource `Licences TopSolid` avec les emplacements Local et Distant · Nextcloud ;
+- vérifier que le bouton principal mémorise localement le dernier emplacement et que la flèche ouvre les deux choix ;
+- lancer **Vérifier le catalogue** avec des chemins valides puis invalides ;
+- contrôler l'historique après plusieurs modifications et restaurer une sauvegarde.
 
 ## Mise à jour
 

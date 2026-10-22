@@ -9,8 +9,8 @@ Le domaine fonctionnel est volontairement générique : une carte représente un
 | Dossier | Responsabilité |
 |---|---|
 | `Models` | Données persistées, sans dépendance WPF |
-| `Services` | stockage, lancement, validation, import `.lnk`, mise à jour |
-| `ViewModels` | recherche, filtrage, favoris, récents et projection par groupes |
+| `Services` | stockage, migration, lancement, validation, ressources, import `.lnk`, mise à jour |
+| `ViewModels` | recherche, filtrage, modes, ressources et projection par groupes |
 | `Views` | fenêtres d'édition et de gestion |
 | `Assets` | identité visuelle Idéo embarquée dans l'exécutable |
 
@@ -21,13 +21,17 @@ Le domaine fonctionnel est volontairement générique : une carte représente un
 `LauncherCatalog` contient :
 
 - `Groups` : sections ordonnées de l'écran ;
-- `Tags` : valeurs filtrables avec catégorie, nom et couleur ;
-- `Cards` : commandes, apparence, comportement et relations vers groupe/tags ;
+- `Tags` : valeurs filtrables avec catégorie, nom, couleur et ordres manuels ;
+- `Cards` : apparence, ordre, modes de lancement et relations vers groupe/tags ;
+- `Resources` : dossiers, fichiers ou URL utiles et leurs emplacements possibles ;
+- `AuditTrail` : dernières modifications avec utilisateur et poste Windows ;
 - `SchemaVersion` : version du format pour les futures migrations.
 
-Une carte contient notamment `TargetPath`, `Arguments`, `WorkingDirectory`, `RunAsAdministrator`, `MinimizeAfterLaunch` et une liste de `QuickAccessLinks`. Chaque accès rapide ne stocke qu'un libellé et un chemin : la résolution et la validation restent dans le ViewModel au moment de l'affichage ou de l'ouverture. Aucun script avant/après lancement ni suivi d'instances n'est exécuté.
+Une carte contient un nombre illimité de `LaunchProfiles`. Chaque profil porte son nom, `TargetPath`, `Arguments`, `WorkingDirectory`, `RunAsAdministrator`, `MinimizeAfterLaunch` et une liste de `QuickAccessLinks`. La carte désigne également son profil partagé par défaut. Le dernier profil effectivement utilisé reste dans les réglages locaux du poste et ne perturbe pas les autres utilisateurs.
 
-Le schéma 2 ajoute `QuickAccessLinks`. `CatalogService.Normalize` initialise cette liste lors de l'ouverture d'un ancien catalogue ; la migration est donc ascendante et ne modifie pas les cartes existantes.
+Une ressource contient autant de `Locations` que nécessaire. Son emplacement partagé par défaut appartient au catalogue ; le dernier emplacement choisi reste local au poste. Une même ressource peut ainsi ouvrir un chemin serveur en local et un dossier synchronisé Nextcloud en distant.
+
+Le schéma 4 ajoute les profils, ressources, ordres de catégories et historique. `CatalogService.Normalize` transforme chaque commande du schéma 2 en profil **Par défaut** sans modifier l'identifiant, le groupe, les tags, l'ordre, le logo, la couleur ni les options de la carte. L'identifiant du profil migré est dérivé de celui de la carte et reste stable avant même la première sauvegarde. Les propriétés historiques sont ensuite vidées uniquement dans le modèle normalisé afin d'éviter deux sources de vérité.
 
 ## Filtres
 
@@ -39,7 +43,7 @@ ET
 (tag C OU tag D de la catégorie 2)
 ```
 
-La recherche texte s'ajoute avec `ET` et inspecte titre, description, cible, arguments, noms de tags et accès rapides.
+La recherche texte s'ajoute avec `ET` et inspecte titre, description, tous les profils, noms de tags et accès rapides.
 
 ## Persistance et sûreté
 
@@ -53,8 +57,9 @@ La recherche texte s'ajoute avec `ET` et inspecte titre, description, cible, arg
 - les erreurs non gérées sont journalisées ;
 - les cibles sont validées avant enregistrement et avant lancement ;
 - les réglages personnels sont séparés du catalogue partageable.
+- le workflow Windows exécute un test de migration 0.3.2 → 0.4.0 qui vérifie les identifiants, l'ordre, le groupe, les tags, l'apparence, la commande, les options, les accès rapides et la création de la sauvegarde.
 
-Les favoris, vues enregistrées, groupes repliés et état du panneau de filtres sont des réglages locaux. Les accès rapides appartiennent aux cartes et sont donc partagés avec le catalogue.
+Les favoris, récents, derniers profils/emplacements utilisés, vues enregistrées, groupes repliés et état du panneau de filtres sont des réglages locaux. Les profils, ressources et accès rapides sont partagés avec le catalogue.
 
 Le fichier JSON est lisible manuellement, mais les modifications doivent normalement passer par l'application pour bénéficier de la validation et des sauvegardes.
 

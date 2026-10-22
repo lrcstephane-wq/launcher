@@ -1,5 +1,20 @@
 # Historique des versions
 
+## 0.4.0
+
+- nouvelle identité Idéo Launcher avec fusée dans l'en-tête, la fenêtre et la barre des tâches ;
+- modes de lancement illimités par carte, notamment Local et Distant · Nextcloud ;
+- bouton scindé lançant le dernier mode utilisé ou affichant tous les modes disponibles ;
+- modes et chemins indisponibles signalés sans masquer la configuration ;
+- ordre manuel stable des cartes, y compris après un lancement, avec glisser-déposer détaillé et compact ;
+- glisser-déposer manuel des catégories de filtres et des tags ;
+- ressources partagées à emplacements multiples, avec un accès Licences TopSolid prêt à configurer ;
+- icônes ajoutées aux menus principaux et aux menus des cartes ;
+- palette de lancement rapide `Ctrl+K`, édition en lot et import groupé de raccourcis `.lnk` ;
+- validation globale du catalogue, historique des modifications et restauration des sauvegardes ;
+- migration automatique du schéma 2 vers le schéma 4 avec conservation intégrale des cartes existantes et sauvegarde préalable ;
+- test de non-régression Windows dédié à la migration 0.3.2 → 0.4.0.
+
 ## 0.3.2
 
 - cartes redimensionnées et réorganisées, avec bandeau d'accent et logo plus visibles ;

@@ -4,17 +4,22 @@ Application Windows destinée à centraliser les raccourcis de travail Idéo : T
 
 ## Fonctions principales
 
-- cartes personnalisables : titre, description, cible, arguments, dossier de travail, logo, couleur, tags et accès dossiers ;
-- lancement normal ou administrateur, avec réduction facultative du launcher ;
-- import d'un raccourci Windows `.lnk` par sélection ou glisser-déposer ;
-- groupes personnalisés et réorganisation des cartes par glisser-déposer ;
-- favoris, filtre dédié et classement des éléments récemment lancés ;
+- cartes personnalisables avec un nombre illimité de modes de lancement, par exemple **Local** et **Distant · Nextcloud** ;
+- bouton scindé : lancement immédiat dans le dernier mode utilisé ou choix explicite dans le menu associé ;
+- lancement normal ou administrateur, accès rapides et réduction facultative configurables par mode ;
+- import d'un ou de plusieurs raccourcis Windows `.lnk` par sélection ou glisser-déposer ;
+- groupes personnalisés et ordre strictement manuel des cartes, tags et catégories par glisser-déposer ;
+- favoris et filtre dédié, sans déplacement automatique après un lancement ;
 - recherche plein texte et filtres multi-sélection ;
+- palette de lancement rapide avec `Ctrl+K` ;
 - vues de filtres enregistrées, groupes et panneau latéral repliables ;
 - gestion centralisée des tags et de leurs catégories ;
+- ressources partagées à plusieurs emplacements, notamment le dossier des licences TopSolid en local ou via Nextcloud ;
+- sélection et modification de plusieurs cartes en une seule opération ;
+- validation globale du catalogue et signalement des chemins indisponibles ;
 - catalogue local ou partagé sur un dossier synchronisé/réseau ;
 - chemin du catalogue visible et rechargement automatique des modifications partagées ;
-- sauvegarde automatique des 20 dernières versions du catalogue ;
+- historique des modifications et sauvegarde automatique des 20 dernières versions du catalogue ;
 - import et export JSON ;
 - mise à jour automatique depuis les releases GitHub.
 
@@ -34,7 +39,9 @@ Exemple : `Version = 6.22 OU 6.27` avec `Usage = Travail` affiche les cartes de 
 - sauvegardes : dossier `Backups` situé à côté du catalogue ;
 - journal : `%LOCALAPPDATA%\Ideo\TopSolidLauncher\launcher.log`.
 
-Les favoris, récents, dimensions de fenêtre, vues enregistrées et états repliés restent propres au poste. Le catalogue (cartes, accès rapides, groupes et tags) peut être partagé.
+Les favoris, récents, dernier mode/emplacement utilisé, dimensions de fenêtre, vues enregistrées et états repliés restent propres au poste. Le catalogue (cartes, modes, ressources, groupes et tags) peut être partagé.
+
+La mise à niveau depuis la version 0.3.2 conserve les cartes existantes. Chaque ancienne commande devient un mode **Par défaut** avec le même identifiant de carte, le même ordre, les mêmes tags, l'apparence et tous ses paramètres. Une sauvegarde du catalogue précédent est créée avant la première écriture au nouveau format.
 
 ## Télécharger l'exécutable
 
