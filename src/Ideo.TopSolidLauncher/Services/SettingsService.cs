@@ -15,6 +15,8 @@ public sealed class SettingsService
             settings.RecentCardIds = settings.RecentCardIds?.Distinct().Take(20).ToList() ?? [];
             settings.CollapsedGroupIds = settings.CollapsedGroupIds?.Distinct().ToList() ?? [];
             settings.SavedViews ??= [];
+            settings.LastLaunchProfileIds ??= [];
+            settings.LastResourceLocationIds ??= [];
             foreach (var view in settings.SavedViews)
                 view.SelectedTagIds = view.SelectedTagIds?.Distinct().ToList() ?? [];
             return settings;

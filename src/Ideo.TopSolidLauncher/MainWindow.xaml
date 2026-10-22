@@ -4,7 +4,8 @@
         xmlns:controls="clr-namespace:Ideo.TopSolidLauncher.Controls"
         Title="Idéo Launcher" Width="1280" Height="820" MinWidth="980" MinHeight="650"
         Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextBrush}"
-        WindowStartupLocation="CenterScreen" Closing="Window_Closing" KeyDown="MainWindow_KeyDown">
+        WindowStartupLocation="CenterScreen" Closing="Window_Closing" KeyDown="MainWindow_KeyDown"
+        Icon="Assets/IdeoLauncher.ico" AllowDrop="True" PreviewDragOver="Window_PreviewDragOver" PreviewDrop="Window_PreviewDrop">
     <Window.Resources>
         <Style x:Key="SidebarHeading" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12" />
@@ -48,9 +49,10 @@
 
             <Border Background="#F0151E2A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="26,0">
                 <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="255"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="310"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Image Source="Assets/IdeoLogo.png" Width="158" Height="62" Stretch="Uniform" />
+                        <Image Source="Assets/IdeoLauncherMark.png" Width="54" Height="54" Stretch="Uniform" Margin="0,0,9,0" />
+                        <Image Source="Assets/IdeoLogo.png" Width="142" Height="56" Stretch="Uniform" />
                         <Border Background="#2E69B3" CornerRadius="5" Padding="7,3" Margin="10,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="LAUNCHER" FontSize="9" FontWeight="Bold" />
                         </Border>
@@ -73,9 +75,14 @@
                                 Click="OpenSettingsMenu_Click" ToolTip="Options">
                             <Button.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Gérer les tags" Click="ManageTags_Click" />
-                                    <MenuItem Header="Ajouter un groupe" Click="AddGroup_Click" />
-                                    <MenuItem Header="Détecter les versions TopSolid" Click="DetectTopSolid_Click" />
+                                    <MenuItem Header="Lancement rapide…" Click="OpenQuickPalette_Click"><MenuItem.Icon><TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
+                                    <MenuItem Header="Gérer les tags" Click="ManageTags_Click"><MenuItem.Icon><TextBlock Text="&#xE8EC;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
+                                    <MenuItem Header="Gérer les ressources" Click="ManageResources_Click"><MenuItem.Icon><TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
+                                    <MenuItem Header="Ajouter un groupe" Click="AddGroup_Click"><MenuItem.Icon><TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
+                                    <MenuItem Header="Importer plusieurs raccourcis…" Click="ImportShortcuts_Click"><MenuItem.Icon><TextBlock Text="&#xE8B5;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
+                                    <MenuItem Header="Détecter les versions TopSolid" Click="DetectTopSolid_Click"><MenuItem.Icon><TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
+                                    <MenuItem Header="Vérifier le catalogue" Click="ValidateCatalog_Click"><MenuItem.Icon><TextBlock Text="&#xE9D5;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
+                                    <MenuItem Header="Historique et sauvegardes" Click="OpenCatalogHistory_Click"><MenuItem.Icon><TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
                                     <Separator />
                                     <MenuItem Header="Vue compacte" IsCheckable="True" Click="ToggleCompact_Click" />
                                     <Separator />
@@ -115,21 +122,30 @@
                                 <ItemsControl ItemsSource="{Binding FilterCategories}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Margin="2,0,0,18">
-                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,7" />
+                                            <Border Margin="2,0,0,18" AllowDrop="True" DragOver="FilterCategory_DragOver" Drop="FilterCategory_Drop">
+                                            <StackPanel>
+                                                <Grid Margin="0,0,0,7">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="⋮⋮" Foreground="#61758E" Cursor="SizeAll" ToolTip="Glisser pour réordonner la catégorie"
+                                                               PreviewMouseLeftButtonDown="FilterGrip_PreviewMouseLeftButtonDown" PreviewMouseMove="CategoryGrip_PreviewMouseMove"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" />
+                                                </Grid>
                                                 <ItemsControl ItemsSource="{Binding Options}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <CheckBox IsChecked="{Binding IsSelected}" ToolTip="{Binding Description}">
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <Border Width="8" Height="8" CornerRadius="4" Background="{Binding Color}" Margin="0,0,7,0" />
-                                                                    <TextBlock Text="{Binding Name}" Foreground="{StaticResource MutedBrush}" />
-                                                                </StackPanel>
-                                                            </CheckBox>
+                                                            <Grid AllowDrop="True" DragOver="FilterTag_DragOver" Drop="FilterTag_Drop">
+                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                                <TextBlock Text="⋮⋮" Foreground="#53667E" Cursor="SizeAll" ToolTip="Glisser pour réordonner le tag"
+                                                                           PreviewMouseLeftButtonDown="FilterGrip_PreviewMouseLeftButtonDown" PreviewMouseMove="TagGrip_PreviewMouseMove"/>
+                                                                <CheckBox Grid.Column="1" IsChecked="{Binding IsSelected}" ToolTip="{Binding Description}">
+                                                                    <StackPanel Orientation="Horizontal"><Border Width="8" Height="8" CornerRadius="4" Background="{Binding Color}" Margin="0,0,7,0"/><TextBlock Text="{Binding Name}" Foreground="{StaticResource MutedBrush}"/></StackPanel>
+                                                                </CheckBox>
+                                                            </Grid>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
                                             </StackPanel>
+                                            </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -159,10 +175,31 @@
                                 </Border>
                                 <StackPanel Margin="2,22,2,0">
                                     <TextBlock Text="RESSOURCES" Style="{StaticResource SidebarHeading}" Margin="0,0,0,9" />
-                                    <Button Click="OpenTopSolidDownloads_Click" Style="{StaticResource SecondaryButton}" HorizontalContentAlignment="Left" Padding="12,9"
-                                            ToolTip="Ouvrir la page officielle des versions actuelles et anciennes">
-                                        <StackPanel Orientation="Horizontal"><TextBlock Text="Téléchargements TopSolid"/><TextBlock Text=" ↗" Foreground="#8BB9EF"/></StackPanel>
-                                    </Button>
+                                    <ItemsControl ItemsSource="{Binding Resources}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,7" ToolTip="{Binding ToolTip}">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
+                                                    <Button Click="OpenResource_Click" Style="{StaticResource SecondaryButton}" HorizontalContentAlignment="Left" Padding="10,8" IsEnabled="{Binding HasAvailableLocation}">
+                                                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" Foreground="#8BB9EF" Margin="0,0,8,0"/><TextBlock Text="{Binding ButtonLabel}" TextTrimming="CharacterEllipsis"/></StackPanel>
+                                                    </Button>
+                                                    <Button Grid.Column="1" Content="⌄" Style="{StaticResource SecondaryButton}" Padding="0" Margin="3,0,0,0" Click="OpenResourceMenu_Click">
+                                                        <Button.ContextMenu>
+                                                            <ContextMenu ItemsSource="{Binding PlacementTarget.DataContext.Locations, RelativeSource={RelativeSource Self}}">
+                                                                <ContextMenu.ItemContainerStyle>
+                                                                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                                        <Setter Property="Header" Value="{Binding Name}"/><Setter Property="IsEnabled" Value="{Binding IsAvailable}"/><Setter Property="ToolTip" Value="{Binding ToolTip}"/>
+                                                                        <EventSetter Event="Click" Handler="OpenResourceLocation_Click"/>
+                                                                    </Style>
+                                                                </ContextMenu.ItemContainerStyle>
+                                                            </ContextMenu>
+                                                        </Button.ContextMenu>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Content="Gérer les ressources" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Padding="2,5" Click="ManageResources_Click"/>
                                 </StackPanel>
                             </StackPanel>
                         </ScrollViewer>
@@ -186,6 +223,9 @@
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                             <TextBlock Text="Glissez les cartes pour les réorganiser" Foreground="#78899E" FontSize="11" Margin="0,0,14,0" VerticalAlignment="Center" />
                             <Button Content="+ Groupe" Style="{StaticResource SecondaryButton}" Click="AddGroup_Click" />
+                            <Button x:Name="BulkModeButton" Content="Sélectionner" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Click="ToggleBulkMode_Click"/>
+                            <TextBlock Text="{Binding BulkSelectionLabel}" Foreground="#8BB9EF" VerticalAlignment="Center" Margin="12,0,0,0" Visibility="{Binding IsBulkSelectionMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            <Button Content="Modifier" Margin="8,0,0,0" Click="BulkEdit_Click" Visibility="{Binding IsBulkSelectionMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
                         </StackPanel>
                     </Grid>
 
@@ -234,7 +274,6 @@
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <Border Style="{StaticResource CardBorderStyle}" AllowDrop="True"
-                                                                PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown" MouseMove="Card_MouseMove"
                                                                 DragOver="Card_DragOver" Drop="Card_Drop">
                                                             <Border.Effect><DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.23" Color="#05080C" /></Border.Effect>
                                                             <Grid ClipToBounds="True">
@@ -246,14 +285,17 @@
                                                                         <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                                                                     </Grid.RowDefinitions>
                                                                     <Grid>
-                                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                                        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" VerticalAlignment="Center" />
-                                                                        <Button Grid.Column="1" Content="{Binding FavoriteGlyph}" Style="{StaticResource GhostButton}" FontSize="19" Padding="5" Click="Favorite_Click" ToolTip="Ajouter/retirer des favoris" />
-                                                                        <Button Grid.Column="2" Content="•••" Style="{StaticResource GhostButton}" Padding="5" Click="OpenCardMenu_Click">
+                                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                        <CheckBox IsChecked="{Binding IsSelected}" Margin="0,0,7,0" VerticalAlignment="Center" Visibility="{Binding DataContext.IsBulkSelectionMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}" ToolTip="Sélectionner cette carte"/>
+                                                                        <TextBlock Grid.Column="1" Text="⠿" FontSize="18" Foreground="#61758E" Cursor="SizeAll" Margin="0,0,8,0" VerticalAlignment="Center" ToolTip="Glisser pour déplacer"
+                                                                                   PreviewMouseLeftButtonDown="CardDragHandle_PreviewMouseLeftButtonDown" PreviewMouseMove="CardDragHandle_PreviewMouseMove"/>
+                                                                        <TextBlock Grid.Column="2" Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}" VerticalAlignment="Center" />
+                                                                        <Button Grid.Column="3" Content="{Binding FavoriteGlyph}" Style="{StaticResource GhostButton}" FontSize="19" Padding="5" Click="Favorite_Click" ToolTip="Ajouter/retirer des favoris" />
+                                                                        <Button Grid.Column="4" Content="•••" Style="{StaticResource GhostButton}" Padding="5" Click="OpenCardMenu_Click">
                                                                             <Button.ContextMenu>
                                                                                 <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                                                                                    <MenuItem Header="Modifier" Click="EditCard_Click" />
-                                                                                    <MenuItem Header="Dupliquer" Click="DuplicateCard_Click" />
+                                                                                    <MenuItem Header="Modifier" Click="EditCard_Click"><MenuItem.Icon><TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
+                                                                                    <MenuItem Header="Dupliquer" Click="DuplicateCard_Click"><MenuItem.Icon><TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
                                                                                     <MenuItem Header="Ouvrir un dossier" ItemsSource="{Binding QuickAccessLinks}">
                                                                                         <MenuItem.Style>
                                                                                             <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
@@ -270,7 +312,7 @@
                                                                                     <Separator />
                                                                                     <MenuItem Header="Déplacer vers la gauche" Click="MoveCardUp_Click" />
                                                                                     <MenuItem Header="Déplacer vers la droite" Click="MoveCardDown_Click" />
-                                                                                    <Separator /><MenuItem Header="Supprimer" Click="DeleteCard_Click" />
+                                                                                    <Separator /><MenuItem Header="Supprimer" Click="DeleteCard_Click"><MenuItem.Icon><TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets"/></MenuItem.Icon></MenuItem>
                                                                                 </ContextMenu>
                                                                             </Button.ContextMenu>
                                                                         </Button>
@@ -340,7 +382,22 @@
                                                                             </Style>
                                                                         </TextBlock.Style>
                                                                     </TextBlock>
-                                                                    <Button Grid.Row="6" Content="Lancer" IsEnabled="{Binding IsValid}" Click="LaunchCard_Click" />
+                                                                    <Grid Grid.Row="6">
+                                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="44"/></Grid.ColumnDefinitions>
+                                                                        <Button Content="{Binding LaunchButtonLabel}" IsEnabled="{Binding IsValid}" Click="LaunchCard_Click"/>
+                                                                        <Button Grid.Column="1" Content="⌄" Style="{StaticResource SecondaryButton}" Margin="4,0,0,0" Padding="0" Click="OpenLaunchModeMenu_Click" ToolTip="Choisir un mode">
+                                                                            <Button.ContextMenu>
+                                                                                <ContextMenu ItemsSource="{Binding PlacementTarget.DataContext.LaunchProfiles, RelativeSource={RelativeSource Self}}">
+                                                                                    <ContextMenu.ItemContainerStyle>
+                                                                                        <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                                                            <Setter Property="Header" Value="{Binding Name}"/><Setter Property="IsEnabled" Value="{Binding IsAvailable}"/><Setter Property="ToolTip" Value="{Binding ToolTip}"/>
+                                                                                            <EventSetter Event="Click" Handler="LaunchMode_Click"/>
+                                                                                        </Style>
+                                                                                    </ContextMenu.ItemContainerStyle>
+                                                                                </ContextMenu>
+                                                                            </Button.ContextMenu>
+                                                                        </Button>
+                                                                    </Grid>
                                                                 </Grid>
                                                             </Grid>
                                                         </Border>

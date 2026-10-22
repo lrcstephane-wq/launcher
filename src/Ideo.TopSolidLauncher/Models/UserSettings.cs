@@ -15,6 +15,8 @@ public sealed class UserSettings
     public List<Guid> RecentCardIds { get; set; } = [];
     public List<Guid> CollapsedGroupIds { get; set; } = [];
     public List<SavedView> SavedViews { get; set; } = [];
+    public Dictionary<Guid, Guid> LastLaunchProfileIds { get; set; } = [];
+    public Dictionary<Guid, Guid> LastResourceLocationIds { get; set; } = [];
 }
 
 public sealed class SavedView
