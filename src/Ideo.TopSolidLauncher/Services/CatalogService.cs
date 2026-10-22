@@ -242,6 +242,10 @@ public sealed class CatalogService
             {
                 var migratedProfile = new LauncherLaunchProfile
                 {
+                    // Une ancienne carte ne possède pas encore d'identifiant de mode.
+                    // Réutiliser son identifiant rend la migration stable tant que le
+                    // catalogue partagé n'a pas encore été enregistré au format 4.
+                    Id = card.Id,
                     Name = "Par défaut",
                     TargetPath = card.TargetPath,
                     Arguments = card.Arguments,
